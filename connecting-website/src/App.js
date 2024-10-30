@@ -1,11 +1,11 @@
 import React from 'react';
-import Navbar from './components/Navbar';
-import BasicInfo from './components/BasicInfo';
-import Overview from './components/Overview';
-import Events from './components/Events';
-import FAQ from './components/FAQ';
-import Demographics from './components/Demographics';
-import Officers from './components/Officers';
+import Navbar from './homepage/Navbar';
+import BasicInfo from './homepage/BasicInfo';
+import Overview from './homepage/Overview';
+import Events from './homepage/Events';
+import FAQ from './homepage/FAQ';
+import Demographics from './homepage/Demographics';
+import Officers from './homepage/Officers';
 import './App.css';
 
 function App() {
