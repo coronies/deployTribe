@@ -1,34 +1,18 @@
 import React from 'react';
-import Navbar from './homepage/Navbar';
-import BasicInfo from './homepage/BasicInfo';
-import Overview from './homepage/Overview';
-import Events from './homepage/Events';
-import FAQ from './homepage/FAQ';
-import Demographics from './homepage/Demographics';
-import Officers from './homepage/Officers';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ClubProfile from './clubprofile/ClubProfile';
+import SearchPage from './bestmatch/SearchPage';
+import ClubPOV from './clubpov/ClubPOV';
 
 function App() {
   return (
-    <div className="App">
-      <Navbar />
-      <header className="header">
-        <h1>Organization Name</h1>
-        <div className="tags">
-          <span className="tag">Tag Info</span>
-          <span className="tag">Tag Info</span>
-          <span className="tag">Tag Info</span>
-        </div>
-      </header>
-      <div className="content">
-        <BasicInfo />
-        <Overview />
-        <Events />
-        <FAQ />
-        <Demographics />
-        <Officers />
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<ClubProfile />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/clubpov" element={<ClubPOV />} />
+      </Routes>
+    </Router>
   );
 }
 
