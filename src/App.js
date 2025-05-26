@@ -30,6 +30,7 @@ import Opportunities from './pages/Opportunities';
 import ManagementDashboard from './components/ManagementDashboard';
 import CreateOpportunity from './components/CreateOpportunity';
 import CreateEvent from './components/CreateEvent';
+import SetupRoute from './components/SetupRoute';
 
 function App() {
   return (
@@ -49,7 +50,14 @@ function App() {
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/about" element={<About />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/club-setup" element={<ClubSetup />} />
+              <Route 
+                path="/club-setup" 
+                element={
+                  <SetupRoute>
+                    <ClubSetup />
+                  </SetupRoute>
+                } 
+              />
               <Route path="/student-dashboard" element={<StudentDashboard />} />
               <Route path="/club-dashboard" element={<ClubDashboard />} />
               <Route path="/profile" element={<Profile />} />

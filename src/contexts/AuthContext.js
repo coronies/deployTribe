@@ -10,7 +10,8 @@ import {
   doc, 
   setDoc, 
   getDoc,
-  serverTimestamp 
+  serverTimestamp,
+  updateDoc 
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 
@@ -23,11 +24,13 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [setupProgress, setSetupProgress] = useState(null);
 
   // Function to refresh user data
   const refreshUserData = async (user) => {
     if (!user) {
       setCurrentUser(null);
+      setSetupProgress(null);
       return;
     }
 
@@ -41,6 +44,10 @@ export function AuthProvider({ children }) {
           const clubDoc = await getDoc(doc(db, 'clubs', user.uid));
           if (clubDoc.exists()) {
             clubData = clubDoc.data();
+            // Track setup progress
+            if (!clubData.isSetupComplete && clubData.setupProgress) {
+              setSetupProgress(clubData.setupProgress);
+            }
           }
         }
 
@@ -55,6 +62,44 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Error refreshing user data:', error);
       setCurrentUser(user);
+    }
+  };
+
+  const updateSetupProgress = async (progress) => {
+    if (!currentUser || currentUser.userType !== 'club') return;
+
+    try {
+      const clubRef = doc(db, 'clubs', currentUser.uid);
+      await updateDoc(clubRef, {
+        setupProgress: progress,
+        updatedAt: serverTimestamp()
+      });
+      setSetupProgress(progress);
+    } catch (error) {
+      console.error('Error updating setup progress:', error);
+    }
+  };
+
+  const completeSetup = async () => {
+    if (!currentUser || currentUser.userType !== 'club') return;
+
+    try {
+      const clubRef = doc(db, 'clubs', currentUser.uid);
+      await updateDoc(clubRef, {
+        isSetupComplete: true,
+        setupProgress: 100,
+        updatedAt: serverTimestamp()
+      });
+      
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        isSetupComplete: true,
+        updatedAt: serverTimestamp()
+      });
+
+      await refreshUserData(currentUser);
+    } catch (error) {
+      console.error('Error completing setup:', error);
     }
   };
 
@@ -176,7 +221,10 @@ export function AuthProvider({ children }) {
     signup,
     login,
     logout,
-    refreshUserData
+    refreshUserData,
+    setupProgress,
+    updateSetupProgress,
+    completeSetup
   };
 
   return (

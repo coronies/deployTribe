@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useBeforeUnload } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db, storage } from '../firebase/config';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -31,10 +31,11 @@ const { INTERESTS, COMMITMENT_LEVELS, EXPERIENCE_LEVELS } = {
 
 const ClubSetup = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, updateSetupProgress, completeSetup } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   const [clubData, setClubData] = useState({
     name: '',
@@ -63,28 +64,59 @@ const ClubSetup = () => {
   const [showAddOfficer, setShowAddOfficer] = useState(false);
   const [newOfficer, setNewOfficer] = useState({ name: '', role: '', email: '' });
 
-  useEffect(() => {
-    if (currentUser?.uid) {
-      loadUserData();
-    }
-  }, [currentUser]);
+  // Add beforeunload event listener
+  useBeforeUnload(
+    React.useCallback(
+      (e) => {
+        if (isDirty) {
+          e.preventDefault();
+          return (e.returnValue = 'You have unsaved changes. Are you sure you want to leave?');
+        }
+      },
+      [isDirty]
+    )
+  );
 
-  const loadUserData = async () => {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setClubData(prev => ({
-          ...prev,
-          presidentName: userData.name,
-          presidentEmail: userData.email,
-          members: [{ id: currentUser.uid, ...userData, role: 'president' }]
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-      setError('Failed to load user data');
+  // Calculate setup progress
+  const calculateProgress = () => {
+    let progress = 0;
+    const total = 6; // Total number of sections
+
+    // Basic info
+    if (clubData.name && clubData.description) progress++;
+    
+    // Profile picture
+    if (clubData.profilePictureUrl) progress++;
+    
+    // Tags
+    if (clubData.tags.interests.length > 0 && clubData.tags.commitment && clubData.tags.experience) progress++;
+    
+    // Meeting times
+    if (Object.keys(clubData.meetingTimes).length > 0) progress++;
+    
+    // Members
+    if (clubData.members.length > 0) progress++;
+    
+    // FAQs
+    if (clubData.faqs.some(faq => faq.question && faq.answer)) progress++;
+
+    return Math.round((progress / total) * 100);
+  };
+
+  // Update progress whenever club data changes
+  useEffect(() => {
+    if (isDirty) {
+      const progress = calculateProgress();
+      updateSetupProgress(progress);
     }
+  }, [clubData, isDirty, updateSetupProgress]);
+
+  const handleInputChange = (field, value) => {
+    setClubData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setIsDirty(true);
   };
 
   const handleProfilePictureChange = async (e) => {
@@ -240,7 +272,10 @@ const ClubSetup = () => {
         updatedAt: new Date().toISOString()
       });
 
+      await completeSetup();
       setSuccess(true);
+      setIsDirty(false);
+      
       setTimeout(() => {
         navigate(`/club/${clubRef.id}`);
       }, 2000);
@@ -256,12 +291,21 @@ const ClubSetup = () => {
     <div className="club-setup-container">
       <div className="setup-header">
         <h1>Create Your Club</h1>
+        <div className="setup-progress">
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${calculateProgress()}%` }}
+            />
+          </div>
+          <span>{calculateProgress()}% Complete</span>
+        </div>
         <button 
           className="save-button"
           onClick={handleSubmit}
-          disabled={loading}
+          disabled={loading || calculateProgress() < 100}
         >
-          {loading ? 'Creating...' : 'Create Club'}
+          {loading ? 'Creating...' : calculateProgress() < 100 ? 'Complete All Sections' : 'Create Club'}
         </button>
       </div>
 
@@ -297,7 +341,7 @@ const ClubSetup = () => {
               <input
                 type="text"
                 value={clubData.name}
-                onChange={(e) => setClubData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Enter club name"
                 required
               />
@@ -308,7 +352,7 @@ const ClubSetup = () => {
               <input
                 type="number"
                 value={clubData.memberLimit}
-                onChange={(e) => setClubData(prev => ({ ...prev, memberLimit: e.target.value }))}
+                onChange={(e) => handleInputChange('memberLimit', e.target.value)}
                 placeholder="Enter member limit"
                 min="1"
               />
@@ -321,7 +365,7 @@ const ClubSetup = () => {
                   <input
                     type="radio"
                     checked={clubData.requiresApplication}
-                    onChange={() => setClubData(prev => ({ ...prev, requiresApplication: true }))}
+                    onChange={() => handleInputChange('requiresApplication', true)}
                   />
                   Yes
                 </label>
@@ -329,7 +373,7 @@ const ClubSetup = () => {
                   <input
                     type="radio"
                     checked={!clubData.requiresApplication}
-                    onChange={() => setClubData(prev => ({ ...prev, requiresApplication: false }))}
+                    onChange={() => handleInputChange('requiresApplication', false)}
                   />
                   No
                 </label>
@@ -343,7 +387,7 @@ const ClubSetup = () => {
                   <input
                     type="radio"
                     checked={clubData.acceptingMembers}
-                    onChange={() => setClubData(prev => ({ ...prev, acceptingMembers: true }))}
+                    onChange={() => handleInputChange('acceptingMembers', true)}
                   />
                   Yes
                 </label>
@@ -351,7 +395,7 @@ const ClubSetup = () => {
                   <input
                     type="radio"
                     checked={!clubData.acceptingMembers}
-                    onChange={() => setClubData(prev => ({ ...prev, acceptingMembers: false }))}
+                    onChange={() => handleInputChange('acceptingMembers', false)}
                   />
                   No
                 </label>
@@ -363,7 +407,7 @@ const ClubSetup = () => {
             <label>Club Description</label>
             <textarea
               value={clubData.description}
-              onChange={(e) => setClubData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Enter club description"
               required
               rows={5}
