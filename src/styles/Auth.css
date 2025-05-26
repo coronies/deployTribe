@@ -1,0 +1,145 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #121212;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 500px;
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.auth-card h2 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.error-message {
+  background: #3d1919;
+  color: #ef4444;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #e5e7eb;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #e5e7eb;
+  background: #2d2d2d;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+textarea.form-input {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.user-type-toggle {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.toggle-button {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  background: #2d2d2d;
+  color: #e5e7eb;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-button:hover {
+  background: #333333;
+}
+
+.toggle-button.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 0.875rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-button:hover {
+  background: #2563eb;
+}
+
+.submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-links {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.auth-links a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-links a:hover {
+  text-decoration: underline;
+} 

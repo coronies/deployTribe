@@ -1,0 +1,171 @@
+.club-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.club-header {
+  display: flex;
+  align-items: center;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.club-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-right: 2rem;
+}
+
+.club-info {
+  flex: 1;
+}
+
+.club-info h1 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.club-description {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 0 0 1rem 0;
+}
+
+.admin-controls {
+  margin-top: 1rem;
+}
+
+.visibility-toggle {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s ease;
+}
+
+.visibility-toggle:hover {
+  background: #357abd;
+}
+
+.members-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.members-section h2 {
+  color: #333;
+  margin: 0 0 1.5rem 0;
+}
+
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.member-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.member-card:hover {
+  transform: translateY(-5px);
+}
+
+.member-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+
+.member-card h3 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.member-major {
+  color: #666;
+  margin: 0 0 0.25rem 0;
+}
+
+.member-year {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+}
+
+.member-social {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.member-social a {
+  color: #4a90e2;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.member-social a:hover {
+  text-decoration: underline;
+}
+
+.club-details {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}
+
+.detail-section {
+  margin-bottom: 2rem;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h2 {
+  color: #333;
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+
+.detail-section p {
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.error, .not-found {
+  text-align: center;
+  padding: 2rem;
+  color: #dc3545;
+  font-size: 1.2rem;
+} 

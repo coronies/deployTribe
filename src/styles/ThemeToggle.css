@@ -1,0 +1,88 @@
+.theme-toggle-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+
+.icon-container {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.sun,
+.moon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: all 0.3s ease;
+  color: var(--text-primary);
+}
+
+/* Light mode styles */
+.theme-toggle-btn.light .sun {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle-btn.light .moon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+
+/* Dark mode styles */
+.theme-toggle-btn.dark {
+  background: var(--bg-tertiary);
+}
+
+.theme-toggle-btn.dark .sun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+
+.theme-toggle-btn.dark .moon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .theme-toggle-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .icon-container {
+    width: 20px;
+    height: 20px;
+  }
+
+  .sun,
+  .moon {
+    width: 20px;
+    height: 20px;
+  }
+} 

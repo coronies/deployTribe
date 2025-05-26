@@ -1,0 +1,211 @@
+.club-profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.club-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.club-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+.club-header h1 {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.club-tags {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: #f0f2f5;
+  color: #666;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+}
+
+.club-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.left-column, .right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+section {
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+section h2 {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.basic-info .info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.info-item .icon {
+  font-size: 1.25rem;
+}
+
+.overview ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.overview li {
+  margin-bottom: 0.5rem;
+}
+
+.faq-item {
+  margin-bottom: 1.5rem;
+}
+
+.faq-item h3 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.calendar-section {
+  margin-bottom: 2rem;
+}
+
+.custom-calendar {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+}
+
+.demographics {
+  margin-bottom: 2rem;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.demographic-chart {
+  text-align: center;
+}
+
+.demographic-chart h3 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.pie-chart {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.pie-segment {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
+  transform: rotate(var(--rotation));
+}
+
+.pie-segment::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--color) 0% var(--percentage),
+    transparent var(--percentage) 100%
+  );
+}
+
+.segment-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  color: white;
+}
+
+:root {
+  --chart-color-1: #3498db;
+  --chart-color-2: #e74c3c;
+  --chart-color-3: #2ecc71;
+  --chart-color-4: #f1c40f;
+  --chart-color-5: #9b59b6;
+}
+
+.officers {
+  margin-top: 2rem;
+}
+
+.officers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.officer-card {
+  text-align: center;
+}
+
+.officer-card img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.officer-card h3 {
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+@media (max-width: 768px) {
+  .club-content {
+    grid-template-columns: 1fr;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .club-header h1 {
+    font-size: 2rem;
+  }
+
+  .club-logo {
+    width: 100px;
+    height: 100px;
+  }
+} 

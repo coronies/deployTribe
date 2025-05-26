@@ -1,0 +1,295 @@
+.club-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.club-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.back-button {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: 1px solid var(--text-secondary);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.club-header h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 2rem;
+}
+
+.club-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.main-info {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.description-section {
+  margin-bottom: 2rem;
+}
+
+.description-section h2 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.description-section p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.detail-item {
+  background: var(--bg-tertiary);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.detail-item h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.detail-item p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.meeting-times {
+  margin-bottom: 2rem;
+}
+
+.meeting-times h2 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.schedule-item {
+  background: var(--bg-tertiary);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.schedule-item h4 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  text-transform: capitalize;
+}
+
+.schedule-item p {
+  color: var(--text-secondary);
+}
+
+.tags-section h2 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tag {
+  background: var(--bg-tertiary);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tag .category {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.tag .subtag {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.action-section {
+  position: sticky;
+  top: 2rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+}
+
+.join-button {
+  width: 100%;
+  padding: 1rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.join-button:hover {
+  background: var(--primary-dark);
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-secondary);
+}
+
+.error button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .club-content {
+    grid-template-columns: 1fr;
+  }
+
+  .action-section {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 12px 12px 0 0;
+    padding: 1rem;
+    z-index: 100;
+  }
+}
+
+.social-links {
+  margin: 2rem 0;
+  padding: 2rem;
+  background: var(--bg-secondary);
+  border-radius: 15px;
+  box-shadow: var(--shadow-light);
+}
+
+.social-links h2 {
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.social-links h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: var(--primary-color);
+  border-radius: 2px;
+}
+
+.social-icons {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.social-icon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-light);
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  transform: translateY(-3px);
+  color: var(--primary-color);
+}
+
+.social-icon:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-pressed);
+}
+
+/* GitHub */
+.social-icon:has(svg[data-icon="github"]):hover {
+  color: #333;
+}
+
+/* LinkedIn */
+.social-icon:has(svg[data-icon="linkedin"]):hover {
+  color: #0077b5;
+}
+
+/* Twitter */
+.social-icon:has(svg[data-icon="twitter"]):hover {
+  color: #1da1f2;
+}
+
+/* Instagram */
+.social-icon:has(svg[data-icon="instagram"]):hover {
+  color: #e4405f;
+}
+
+/* Discord */
+.social-icon:has(svg[data-icon="discord"]):hover {
+  color: #7289da;
+}
+
+/* Slack */
+.social-icon:has(svg[data-icon="slack"]):hover {
+  color: #e01e5a;
+} 

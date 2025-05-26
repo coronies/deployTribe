@@ -1,0 +1,187 @@
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile
+} from 'firebase/auth';
+import { 
+  doc, 
+  setDoc, 
+  getDoc,
+  serverTimestamp 
+} from 'firebase/firestore';
+import { auth, db } from '../firebase/config';
+
+const AuthContext = createContext();
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+export function AuthProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Function to refresh user data
+  const refreshUserData = async (user) => {
+    if (!user) {
+      setCurrentUser(null);
+      return;
+    }
+
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        let clubData = null;
+
+        if (userData.userType === 'club') {
+          const clubDoc = await getDoc(doc(db, 'clubs', user.uid));
+          if (clubDoc.exists()) {
+            clubData = clubDoc.data();
+          }
+        }
+
+        setCurrentUser({
+          ...user,
+          ...userData,
+          ...(clubData && { clubData })
+        });
+      } else {
+        setCurrentUser(user);
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      setCurrentUser(user);
+    }
+  };
+
+  async function signup(email, password, userType, userData) {
+    try {
+      // Step 1: Create auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Step 2: Prepare user data
+      const userProfileData = {
+        uid: user.uid,
+        email: user.email,
+        userType,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isSetupComplete: userType === 'student',
+        ...(userType === 'student' ? { 
+          name: userData.name,
+          interests: [],
+          joinedClubs: []
+        } : {
+          clubName: userData.clubName,
+          description: userData.description,
+          categories: [],
+          members: [user.uid],
+          admins: [user.uid]
+        })
+      };
+
+      // Step 3: Update auth profile
+      await updateProfile(user, {
+        displayName: userType === 'student' ? userData.name : userData.clubName
+      });
+
+      // Step 4: Create user document
+      await setDoc(doc(db, 'users', user.uid), userProfileData);
+
+      // Step 5: If club, create club document
+      if (userType === 'club') {
+        const clubData = {
+          uid: user.uid,
+          name: userData.clubName,
+          description: userData.description,
+          categories: [],
+          members: [user.uid],
+          admins: [user.uid],
+          events: [],
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          isSetupComplete: false
+        };
+        await setDoc(doc(db, 'clubs', user.uid), clubData);
+      }
+
+      return {
+        ...user,
+        ...userProfileData
+      };
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
+    }
+  }
+
+  async function login(email, password) {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Get user profile data
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (!userDoc.exists()) {
+        throw new Error('User profile not found');
+      }
+
+      const userData = userDoc.data();
+      
+      // If club, get club data
+      let clubData = null;
+      if (userData.userType === 'club') {
+        const clubDoc = await getDoc(doc(db, 'clubs', user.uid));
+        if (clubDoc.exists()) {
+          clubData = clubDoc.data();
+        }
+      }
+
+      return {
+        ...user,
+        ...userData,
+        ...(clubData && { clubData })
+      };
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  }
+
+  function logout() {
+    return signOut(auth);
+  }
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await refreshUserData(user);
+      } else {
+        setCurrentUser(null);
+      }
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const value = {
+    currentUser,
+    loading,
+    signup,
+    login,
+    logout,
+    refreshUserData
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+} 

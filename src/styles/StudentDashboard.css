@@ -1,0 +1,165 @@
+:root {
+  --shadow-light: 8px 8px 15px rgba(163, 177, 198, 0.6),
+                  -8px -8px 15px rgba(255, 255, 255, 0.5);
+  --shadow-inset: inset 3px 3px 7px rgba(136, 165, 191, 0.48), 
+                  inset -3px -3px 7px #FFFFFF;
+  --shadow-pressed: inset 6px 6px 10px rgba(163, 177, 198, 0.4),
+                   inset -6px -6px 10px rgba(255, 255, 255, 0.8);
+}
+
+.student-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  color: #2d3748;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.dashboard-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-section h2 {
+  color: #2d3748;
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Quick Actions */
+.action-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: #4361ee;
+}
+
+.action-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.action-card h3 {
+  color: #2d3748;
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.action-card p {
+  color: #718096;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Activity Cards */
+.activity-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.activity-card {
+  padding: 1.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.activity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: #4361ee;
+}
+
+.activity-card h3 {
+  color: #2d3748;
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.activity-card p {
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+/* Recommendations */
+.recommendation-cards {
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-state {
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.action-button {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #4361ee;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: background 0.2s ease;
+}
+
+.action-button:hover {
+  background: #3651d4;
+}
+
+@media (max-width: 768px) {
+  .student-dashboard {
+    padding: 1rem;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .action-cards,
+  .activity-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .action-card,
+  .activity-card {
+    padding: 1.5rem;
+  }
+} 

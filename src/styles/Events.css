@@ -1,0 +1,320 @@
+.events-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.events-container h1 {
+  text-align: center;
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+  color: #2D3436;
+}
+
+.events-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.events-header h1 {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}
+
+.filter-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.filter-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  background-color: #f0f2f5;
+  color: #666;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-button:hover {
+  background-color: #e4e6e9;
+}
+
+.filter-button.active {
+  background-color: #3498db;
+  color: white;
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 2.5rem;
+  padding: 1rem;
+}
+
+/* Base card styles */
+.event-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+/* Minimal design */
+.event-card.minimal {
+  background: white;
+  border: 1px solid #eee;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.minimal .event-date {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: #f8f9fa;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.minimal .event-content {
+  padding-top: 1rem;
+}
+
+.minimal .event-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+/* Gradient design */
+.event-card.gradient {
+  background: linear-gradient(135deg, #4B6CB7 0%, #182848 100%);
+  color: white;
+  padding: 2.5rem;
+}
+
+.gradient .event-date {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 1rem;
+  border-radius: 12px;
+  color: white;
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+.gradient .tag {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.gradient .event-actions button {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Image-based design */
+.event-card.image-based {
+  background: #2D3436;
+  color: white;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.image-based::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);
+  z-index: 1;
+}
+
+.image-based .event-content {
+  position: relative;
+  z-index: 2;
+  padding: 2rem;
+  margin-top: auto;
+}
+
+.image-based .event-date {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: #2D3436;
+  padding: 0.75rem 1.5rem;
+  border-radius: 30px;
+}
+
+/* Modern design */
+.event-card.modern {
+  background: white;
+  padding: 0;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.modern .event-date {
+  background: #5F2C82;
+  color: white;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.modern .event-content {
+  padding: 2rem;
+}
+
+.modern .event-actions {
+  margin-top: auto;
+  padding: 2rem;
+  background: #f8f9fa;
+  display: flex;
+  gap: 1rem;
+}
+
+/* Common elements */
+.event-date .month {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.event-date .day {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.event-content h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.event-description {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.event-details {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+}
+
+.icon {
+  font-size: 1.25rem;
+}
+
+.event-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.tag {
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.event-actions button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.register-btn {
+  background: #4B6CB7;
+  color: white;
+  border: none;
+  flex: 2;
+}
+
+.details-btn {
+  background: transparent;
+  border: 1px solid #4B6CB7;
+  color: #4B6CB7;
+  flex: 1;
+}
+
+/* Loading state */
+.events-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #4B6CB7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 2rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .events-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .events-container {
+    padding: 2rem 1rem;
+  }
+
+  .events-container h1 {
+    font-size: 2.5rem;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .event-card {
+    margin-bottom: 2rem;
+  }
+} 

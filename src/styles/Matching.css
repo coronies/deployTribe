@@ -1,0 +1,181 @@
+/* Add new color variables */
+:root {
+  --gradient-1: linear-gradient(135deg, #2D3436 0%, #000000 100%);
+  --gradient-2: linear-gradient(135deg, #4B6CB7 0%, #182848 100%);
+  --gradient-3: linear-gradient(135deg, #134E5E 0%, #71B280 100%);
+  --gradient-4: linear-gradient(135deg, #5F2C82 0%, #49A09D 100%);
+  --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  --hover-transform: translateY(-8px);
+  --text-primary: #2D3436;
+  --text-secondary: #666;
+  --bg-secondary: white;
+  --primary-color: #2D3436;
+  --primary-dark: #1a2022;
+  --bg-tertiary: rgba(255, 255, 255, 0.1);
+}
+
+.matching-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.matching-container h1 {
+  text-align: center;
+  color: #2d3748;
+  margin-bottom: 2rem;
+}
+
+.matches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.match-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.match-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.match-score {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background: #4361ee;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(67, 97, 238, 0.3);
+}
+
+.match-card h2 {
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.club-description {
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.match-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.match-detail {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.match-detail span {
+  min-width: 100px;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background: #4361ee;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.club-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tag {
+  background: #ebf4ff;
+  color: #4361ee;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.apply-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #4361ee;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.apply-button:hover {
+  background: #3651d4;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #4a5568;
+  font-size: 1.1rem;
+}
+
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #e53e3e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.error button {
+  padding: 0.75rem 1.5rem;
+  background: #4361ee;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.error button:hover {
+  background: #3651d4;
+}
+
+@media (max-width: 768px) {
+  .matches-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .match-card {
+    margin: 0 1rem;
+  }
+} 

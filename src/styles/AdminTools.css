@@ -1,0 +1,85 @@
+.admin-tools {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-tools h1 {
+  color: #2d3748;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.admin-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.admin-section h2 {
+  color: #4a5568;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.admin-action {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-button.primary {
+  background-color: #4361ee;
+  color: white;
+}
+
+.admin-button.primary:hover {
+  background-color: #3651d4;
+}
+
+.admin-button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.message {
+  padding: 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.message.success {
+  background-color: #c6f6d5;
+  color: #2f855a;
+  border: 1px solid #9ae6b4;
+}
+
+.message.error {
+  background-color: #fed7d7;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+}
+
+@media (max-width: 640px) {
+  .admin-tools {
+    padding: 1rem;
+  }
+  
+  .admin-section {
+    padding: 1rem;
+  }
+} 
