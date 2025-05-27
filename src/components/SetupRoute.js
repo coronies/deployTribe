@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingScreen from './LoadingScreen';
 
+const ALLOWED_PATHS = ['/login', '/register'];
+
 const SetupRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
@@ -10,24 +12,36 @@ const SetupRoute = ({ children }) => {
 
   useEffect(() => {
     const checkSetup = () => {
-      // If not loading and either no user or not a club account
-      if (!loading && (!currentUser || currentUser.userType !== 'club')) {
+      // If not loading and no user, redirect to login
+      if (!loading && !currentUser) {
         navigate('/login');
         return;
       }
 
-      // If user is a club and setup is complete, redirect to dashboard
-      if (!loading && currentUser?.userType === 'club' && currentUser?.clubData?.isSetupComplete) {
-        navigate('/club-dashboard');
+      // If user is not a club account, allow normal navigation
+      if (!loading && currentUser?.userType !== 'club') {
         return;
       }
 
-      // If user is on a different page and setup is not complete, redirect back to setup
-      if (!loading && 
-          currentUser?.userType === 'club' && 
-          !currentUser?.clubData?.isSetupComplete && 
-          location.pathname !== '/club-setup') {
-        navigate('/club-setup');
+      // For club accounts:
+      if (!loading && currentUser?.userType === 'club') {
+        // If setup is complete, allow access to requested page
+        if (currentUser?.clubData?.isSetupComplete) {
+          return;
+        }
+
+        // If setup is not complete:
+        if (!currentUser?.clubData?.isSetupComplete) {
+          // Allow access only to login/register pages
+          if (ALLOWED_PATHS.includes(location.pathname)) {
+            return;
+          }
+          
+          // If not on setup page, redirect to setup
+          if (location.pathname !== '/club-setup') {
+            navigate('/club-setup');
+          }
+        }
       }
     };
 
@@ -39,7 +53,7 @@ const SetupRoute = ({ children }) => {
     return <LoadingScreen />;
   }
 
-  // If all checks pass, render the setup page
+  // If all checks pass, render the children
   return children;
 };
 
