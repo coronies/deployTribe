@@ -1,0 +1,281 @@
+:root {
+  /* Base Colors */
+  --background: #f0f4f8;
+  --card-bg: #ffffff;
+  --neu-shadow: 
+    12px 12px 24px rgba(163, 177, 198, 0.2),
+    -12px -12px 24px rgba(255, 255, 255, 0.6);
+  
+  /* Category Colors */
+  --technology-color: #4361ee;
+  --business-color: #ff6b6b;
+  --arts-color: #da77f2;
+  --science-color: #20c997;
+  --social-color: #fab005;
+}
+
+/* Base Styles */
+body {
+  background: var(--background);
+}
+
+.quiz-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+/* Header Styles */
+.quiz-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.quiz-header h1 {
+  font-size: 2.5rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.quiz-header p {
+  color: #4a5568;
+  font-size: 1.1rem;
+}
+
+/* Step Title Section with Neumorphic Style */
+.quiz-step {
+  padding: 2rem;
+  background: var(--card-bg);
+  border-radius: 20px;
+  box-shadow: var(--neu-shadow);
+  margin-bottom: 2rem;
+}
+
+.quiz-step h2 {
+  font-size: 2rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  text-align: center;
+  text-shadow: var(--neu-text-shadow);
+}
+
+.step-description {
+  text-align: center;
+  color: #4a5568;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  text-shadow: var(--neu-text-shadow);
+}
+
+/* Progress Bar */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  margin: 2rem 0;
+  box-shadow: var(--neu-shadow-inset);
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background: linear-gradient(45deg, var(--technology-color), #4895ef);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Categories Grid */
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+/* Category Cards - Base Styles */
+.category-card {
+  background: #ffffff !important;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--neu-shadow);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Category-specific borders */
+.category-card[data-category="Technology"] {
+  border-top: 4px solid var(--technology-color);
+}
+
+.category-card[data-category="Business"] {
+  border-top: 4px solid var(--business-color);
+}
+
+.category-card[data-category="Arts & Culture"] {
+  border-top: 4px solid var(--arts-color);
+}
+
+.category-card[data-category="Science"] {
+  border-top: 4px solid var(--science-color);
+}
+
+.category-card[data-category="Social Impact"] {
+  border-top: 4px solid var(--social-color);
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Category Header */
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.category-header h3 {
+  font-size: 1.5rem;
+  color: #2d3748;
+  margin: 0;
+  font-weight: 600;
+}
+
+.selected-count {
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: #4a5568;
+  background: var(--background);
+  box-shadow: inset 2px 2px 5px rgba(163, 177, 198, 0.2);
+}
+
+/* Subtags */
+.subtags {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.subtag {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
+  border: none;
+  background: var(--background);
+  color: #4a5568;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.subtag:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+}
+
+.subtag.selected {
+  background: #ffffff;
+  color: #2d3748;
+  font-weight: 600;
+  box-shadow: inset 2px 2px 5px rgba(163, 177, 198, 0.2);
+  border-left: 4px solid;
+}
+
+.subtag.selected[data-category="Technology"] {
+  border-color: var(--technology-color);
+}
+
+.subtag.selected[data-category="Business"] {
+  border-color: var(--business-color);
+}
+
+.subtag.selected[data-category="Arts & Culture"] {
+  border-color: var(--arts-color);
+}
+
+.subtag.selected[data-category="Science"] {
+  border-color: var(--science-color);
+}
+
+.subtag.selected[data-category="Social Impact"] {
+  border-color: var(--social-color);
+}
+
+/* Navigation */
+.quiz-navigation {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.nav-button {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.nav-button.back {
+  background: var(--background);
+  color: #4a5568;
+}
+
+.nav-button.continue {
+  background: var(--technology-color);
+  color: white;
+}
+
+.nav-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .quiz-container {
+    padding: 1rem;
+  }
+
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .subtags {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-button {
+    width: 100%;
+  }
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.category-card {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Accessibility */
+.quiz-container *:focus {
+  outline: none;
+  box-shadow: var(--neu-shadow-hover);
+} 

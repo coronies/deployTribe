@@ -1,0 +1,356 @@
+/* Neumorphic Variables */
+:root {
+  --background: #e0e5ec;
+  --text-color: #2d3436;
+  --shadow-light: #ffffff;
+  --shadow-dark: #a3b1c6;
+  --primary: #4a90e2;
+  --success: #27ae60;
+  --danger: #e74c3c;
+  --warning: #f1c40f;
+}
+
+.club-internal-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+.internal-header {
+  padding: 2rem;
+  border-radius: 20px;
+  background: var(--background);
+  box-shadow: 8px 8px 15px var(--shadow-dark),
+              -8px -8px 15px var(--shadow-light);
+  margin-bottom: 2rem;
+}
+
+.internal-header h1 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 2.5rem;
+  text-align: center;
+}
+
+.internal-content {
+  display: grid;
+  gap: 2rem;
+}
+
+.internal-section {
+  padding: 2rem;
+  border-radius: 20px;
+  background: var(--background);
+  box-shadow: 8px 8px 15px var(--shadow-dark),
+              -8px -8px 15px var(--shadow-light);
+}
+
+.internal-section h2 {
+  color: var(--text-color);
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Join Requests */
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.request-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 15px;
+  background: var(--background);
+  box-shadow: inset 4px 4px 8px var(--shadow-dark),
+              inset -4px -4px 8px var(--shadow-light);
+}
+
+.request-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+}
+
+.request-info {
+  flex: 1;
+}
+
+.request-info h3 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.2rem;
+}
+
+.request-info p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.request-message {
+  font-style: italic;
+  color: #666;
+}
+
+.request-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.approve-button,
+.reject-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.approve-button {
+  background: var(--success);
+  color: white;
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+}
+
+.reject-button {
+  background: var(--danger);
+  color: white;
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+}
+
+.approve-button:hover,
+.reject-button:hover {
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Members Grid */
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.member-card {
+  padding: 1.5rem;
+  border-radius: 15px;
+  background: var(--background);
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+  text-align: center;
+}
+
+.member-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  object-fit: cover;
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+}
+
+.member-info h3 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.2rem;
+}
+
+.member-info p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.member-major,
+.member-year {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Resources */
+.add-resource-button {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  background: var(--primary);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+}
+
+.add-resource-button:hover {
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.resource-form {
+  padding: 2rem;
+  border-radius: 15px;
+  background: var(--background);
+  box-shadow: inset 4px 4px 8px var(--shadow-dark),
+              inset -4px -4px 8px var(--shadow-light);
+  margin-bottom: 2rem;
+}
+
+.resource-form input,
+.resource-form textarea {
+  width: 100%;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: none;
+  border-radius: 12px;
+  background: var(--background);
+  color: var(--text-color);
+  box-shadow: inset 4px 4px 8px var(--shadow-dark),
+              inset -4px -4px 8px var(--shadow-light);
+}
+
+.resource-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form-actions button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.form-actions button[type="submit"] {
+  background: var(--success);
+  color: white;
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+}
+
+.form-actions .cancel-button {
+  background: var(--danger);
+  color: white;
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+}
+
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.resource-card {
+  padding: 1.5rem;
+  border-radius: 15px;
+  background: var(--background);
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+}
+
+.resource-card h3 {
+  margin: 0 0 1rem;
+  color: var(--text-color);
+  font-size: 1.2rem;
+}
+
+.resource-card p {
+  margin: 0 0 1rem;
+  color: #666;
+}
+
+.resource-link {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  background: var(--primary);
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  box-shadow: 4px 4px 8px var(--shadow-dark),
+              -4px -4px 8px var(--shadow-light);
+  transition: all 0.3s ease;
+}
+
+.resource-link:hover {
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.no-data {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .club-internal-container {
+    padding: 1rem;
+  }
+
+  .internal-header {
+    padding: 1.5rem;
+  }
+
+  .internal-header h1 {
+    font-size: 2rem;
+  }
+
+  .internal-section {
+    padding: 1.5rem;
+  }
+
+  .request-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .request-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .request-actions button {
+    width: 100%;
+  }
+
+  .members-grid,
+  .resources-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+} 
