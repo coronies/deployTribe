@@ -1,56 +1,34 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { storage, db, auth } from '../firebase/config';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
-import { FaLinkedin, FaGithub, FaTwitter, FaInstagram, FaGlobe } from 'react-icons/fa';
+import { 
+  FaCamera, 
+  FaTrash, 
+  FaLinkedin, 
+  FaGithub, 
+  FaTwitter, 
+  FaInstagram, 
+  FaFacebook, 
+  FaYoutube, 
+  FaTiktok, 
+  FaSnapchat, 
+  FaDiscord, 
+  FaSlack, 
+  FaTelegram, 
+  FaWhatsapp, 
+  FaGlobe,
+  FaReddit,
+  FaPinterest,
+  FaTwitch,
+  FaSpotify,
+  FaFileUpload,
+  FaFile,
+  FaDownload
+} from 'react-icons/fa';
 import '../styles/Profile.css';
-
-const MAX_IMAGE_SIZE = 300; // Maximum width/height for profile images
-
-const resizeImage = (file) => {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-
-        // Calculate new dimensions while maintaining aspect ratio
-        if (width > height) {
-          if (width > MAX_IMAGE_SIZE) {
-            height = Math.round((height * MAX_IMAGE_SIZE) / width);
-            width = MAX_IMAGE_SIZE;
-          }
-        } else {
-          if (height > MAX_IMAGE_SIZE) {
-            width = Math.round((width * MAX_IMAGE_SIZE) / height);
-            height = MAX_IMAGE_SIZE;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Convert to Blob
-        canvas.toBlob((blob) => {
-          resolve(new File([blob], file.name, {
-            type: 'image/jpeg',
-            lastModified: Date.now(),
-          }));
-        }, 'image/jpeg', 0.8); // 0.8 quality for good balance of size and quality
-      };
-    };
-  });
-};
 
 const Profile = () => {
   const { currentUser, refreshUserData } = useAuth();
@@ -66,6 +44,18 @@ const Profile = () => {
       github: '',
       twitter: '',
       instagram: '',
+      facebook: '',
+      youtube: '',
+      tiktok: '',
+      snapchat: '',
+      discord: '',
+      slack: '',
+      telegram: '',
+      whatsapp: '',
+      reddit: '',
+      pinterest: '',
+      twitch: '',
+      spotify: '',
       portfolio: ''
     },
     resume: null,
@@ -73,7 +63,9 @@ const Profile = () => {
     joinedClubs: []
   });
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const loadProfileData = useCallback(async () => {
     if (!currentUser) return;
@@ -91,10 +83,10 @@ const Profile = () => {
           }
         }));
       }
-      setLoading(false);
     } catch (error) {
       console.error('Error loading profile:', error);
-      setMessage('Error loading profile data');
+      setError('Error loading profile data');
+    } finally {
       setLoading(false);
     }
   }, [currentUser]);
@@ -103,59 +95,37 @@ const Profile = () => {
     loadProfileData();
   }, [loadProfileData]);
 
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    setMessage('');
-    try {
-      // Update Auth profile
-      await updateProfile(auth.currentUser, {
-        displayName: profileData.fullName
-      });
-
-      // Update Firestore
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, {
-        ...profileData,
-        lastUpdated: serverTimestamp()
-      });
-
-      // Force refresh the auth token to get updated user data
-      await auth.currentUser.reload();
-      
-      // Refresh the user data in context
-      await refreshUserData(auth.currentUser);
-      
-      setMessage('Profile updated successfully!');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setMessage('Failed to update profile');
-    }
-  };
-
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     try {
-      setMessage('Processing image...');
+      setError('');
+      setSuccess('');
+      setUploadingImage(true);
 
-      // Resize image before upload
-      const resizedImage = await resizeImage(file);
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please select an image file');
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('Image size should be less than 5MB');
+      }
+
+      // Create a unique filename with timestamp to prevent caching
+      const timestamp = Date.now();
+      const filename = `profile_${currentUser.uid}_${timestamp}`;
+      const storageRef = ref(storage, `profile_images/${currentUser.uid}/${filename}`);
       
-      setMessage('Uploading image...');
-
-      // Create a reference with a fixed name (overwrite existing)
-      const storageRef = ref(storage, `profile_images/${currentUser.uid}/profile-image`);
+      // Upload the file
+      await uploadBytes(storageRef, file);
       
-      // Upload the resized file
-      const uploadResult = await uploadBytes(storageRef, resizedImage);
-      console.log('Upload successful:', uploadResult);
-
       // Get the download URL
-      const downloadURL = await getDownloadURL(uploadResult.ref);
-      console.log('Download URL:', downloadURL);
-
-      // Update Firebase Auth profile
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update Auth profile
       await updateProfile(auth.currentUser, {
         photoURL: downloadURL
       });
@@ -173,250 +143,498 @@ const Profile = () => {
         profileImage: downloadURL
       }));
 
-      // Refresh the user data in context
+      // Refresh user data in context
       await refreshUserData(auth.currentUser);
+      setSuccess('Profile picture updated successfully!');
 
-      setMessage('Profile image updated successfully!');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      setMessage(`Upload failed: ${error.message}`);
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      setError(err.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
-  // Cleanup function for temporary URLs
-  useEffect(() => {
-    return () => {
-      if (profileData.profileImage && profileData.profileImage.startsWith('blob:')) {
-        URL.revokeObjectURL(profileData.profileImage);
-      }
-    };
-  }, [profileData.profileImage]);
+  const handleDeleteImage = async () => {
+    if (!currentUser?.uid || !profileData.profileImage) {
+      setError('You must be logged in to delete your profile image');
+      return;
+    }
 
-  // Update the useEffect to handle image loading
-  useEffect(() => {
-    if (!currentUser?.uid) return;
+    try {
+      setError('');
+      setSuccess('');
+      setUploadingImage(true);
 
-    const loadUserProfile = async () => {
-      try {
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setProfileData(prev => ({
-            ...prev,
-            ...userData
-          }));
+      // Delete the image from storage if it exists
+      if (profileData.profileImage && profileData.profileImage.includes('firebase')) {
+        try {
+          // Create a reference directly to the user's profile images folder
+          const imageFileName = profileData.profileImage.split('/').pop().split('?')[0];
+          const imageRef = ref(storage, `profile_images/${currentUser.uid}/${imageFileName}`);
+          await deleteObject(imageRef);
+        } catch (deleteError) {
+          console.warn('Could not delete image from storage:', deleteError);
         }
-      } catch (error) {
-        console.error('Error loading user profile:', error);
       }
-    };
 
-    loadUserProfile();
-  }, [currentUser]);
+      // Update Firestore first
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        profileImage: null,
+        lastUpdated: serverTimestamp()
+      });
+
+      // Then update Auth profile
+      try {
+        await updateProfile(auth.currentUser, {
+          photoURL: ''  // Use empty string instead of null
+        });
+      } catch (authError) {
+        console.warn('Could not update auth profile:', authError);
+      }
+
+      // Update local state
+      setProfileData(prev => ({
+        ...prev,
+        profileImage: null
+      }));
+
+      setSuccess('Profile picture removed successfully!');
+
+    } catch (err) {
+      console.error('Error deleting image:', err);
+      setError(err.message || 'Failed to delete image. Please try again.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    
+    try {
+      // Update Auth profile
+      await updateProfile(auth.currentUser, {
+        displayName: profileData.fullName
+      });
+
+      // Update Firestore
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        ...profileData,
+        lastUpdated: serverTimestamp()
+      });
+
+      // Refresh user data
+      await auth.currentUser.reload();
+      await refreshUserData(auth.currentUser);
+      
+      setSuccess('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setError('Failed to update profile');
+    }
+  };
+
+  const getDefaultAvatar = () => {
+    return profileData.fullName ? profileData.fullName.charAt(0).toUpperCase() : 'T';
+  };
+
+  const getSocialIcon = (platform) => {
+    const iconMap = {
+      linkedin: <FaLinkedin />,
+      github: <FaGithub />,
+      twitter: <FaTwitter />,
+      instagram: <FaInstagram />,
+      facebook: <FaFacebook />,
+      youtube: <FaYoutube />,
+      tiktok: <FaTiktok />,
+      snapchat: <FaSnapchat />,
+      discord: <FaDiscord />,
+      slack: <FaSlack />,
+      telegram: <FaTelegram />,
+      whatsapp: <FaWhatsapp />,
+      reddit: <FaReddit />,
+      pinterest: <FaPinterest />,
+      twitch: <FaTwitch />,
+      spotify: <FaSpotify />,
+      portfolio: <FaGlobe />
+    };
+    return iconMap[platform] || <FaGlobe />;
+  };
+
+  const getSocialColor = (platform) => {
+    const colorMap = {
+      linkedin: '#0077b5',
+      github: '#333',
+      twitter: '#1da1f2',
+      instagram: '#e4405f',
+      facebook: '#1877f2',
+      youtube: '#ff0000',
+      tiktok: '#000000',
+      snapchat: '#fffc00',
+      discord: '#5865f2',
+      slack: '#4a154b',
+      telegram: '#0088cc',
+      whatsapp: '#25d366',
+      reddit: '#ff4500',
+      pinterest: '#bd081c',
+      twitch: '#9146ff',
+      spotify: '#1db954',
+      portfolio: '#4299e1'
+    };
+    return colorMap[platform] || '#4299e1';
+  };
 
   const handleResumeUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     try {
-      setMessage('Uploading resume...');
+      setError('');
+      setSuccess('');
+      setUploadingImage(true); // Reuse the loading state
 
-      // Create a reference with a fixed name (overwrite existing)
-      const storageRef = ref(storage, `resumes/${currentUser.uid}/current-resume`);
+      // Validate file type
+      if (!file.type.includes('pdf')) {
+        throw new Error('Please upload a PDF file');
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('Resume size should be less than 10MB');
+      }
+
+      // Create a unique filename
+      const timestamp = Date.now();
+      const filename = `resume_${currentUser.uid}_${timestamp}.pdf`;
+      const storageRef = ref(storage, `resumes/${currentUser.uid}/${filename}`);
       
       // Upload the file
-      const uploadResult = await uploadBytes(storageRef, file);
-      console.log('Resume upload successful:', uploadResult);
-
+      await uploadBytes(storageRef, file);
+      
       // Get the download URL
-      const downloadURL = await getDownloadURL(uploadResult.ref);
-      console.log('Resume URL:', downloadURL);
+      const downloadURL = await getDownloadURL(storageRef);
 
       // Update Firestore
       const userRef = doc(db, 'users', currentUser.uid);
       await updateDoc(userRef, {
-        resume: downloadURL,
-        resumeFileName: file.name,
-        lastUpdated: serverTimestamp()
+        resume: {
+          url: downloadURL,
+          name: file.name,
+          uploadedAt: serverTimestamp()
+        }
       });
 
       // Update local state
       setProfileData(prev => ({
         ...prev,
-        resume: downloadURL,
-        resumeFileName: file.name
+        resume: {
+          url: downloadURL,
+          name: file.name
+        }
       }));
 
-      setMessage('Resume uploaded successfully!');
-    } catch (error) {
-      console.error('Error uploading resume:', error);
-      setMessage(`Resume upload failed: ${error.message}`);
+      setSuccess('Resume uploaded successfully!');
+    } catch (err) {
+      console.error('Error uploading resume:', err);
+      setError(err.message || 'Failed to upload resume');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDeleteResume = async () => {
+    if (!currentUser?.uid || !profileData.resume?.url) return;
+
+    try {
+      setError('');
+      setSuccess('');
+      setUploadingImage(true);
+
+      // Delete the file from storage
+      if (profileData.resume.url.includes('firebase')) {
+        try {
+          const resumeFileName = profileData.resume.url.split('/').pop().split('?')[0];
+          const resumeRef = ref(storage, `resumes/${currentUser.uid}/${resumeFileName}`);
+          await deleteObject(resumeRef);
+        } catch (deleteError) {
+          console.warn('Could not delete resume from storage:', deleteError);
+        }
+      }
+
+      // Update Firestore
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        resume: null
+      });
+
+      // Update local state
+      setProfileData(prev => ({
+        ...prev,
+        resume: null
+      }));
+
+      setSuccess('Resume removed successfully!');
+    } catch (err) {
+      console.error('Error deleting resume:', err);
+      setError(err.message || 'Failed to delete resume');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="loading">
+        <p>Loading profile...</p>
+      </div>
+    );
   }
 
   return (
     <div className="profile-container">
-      <div className="profile-card neomorphic">
-        <div className="profile-header neomorphic-inset">
-          <div className="profile-image-container">
-            <img 
-              src={profileData.profileImage || currentUser?.photoURL || '/default-avatar.png'} 
-              alt={profileData.fullName || 'Profile'} 
-              className="profile-image neomorphic"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/default-avatar.png';
-              }}
-            />
+      <div className="profile-header">
+        <div className="profile-image-container">
+          {profileData.profileImage ? (
+            <>
+              <img 
+                src={profileData.profileImage}
+                alt={profileData.fullName || 'Profile'} 
+                className="profile-image"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/default-avatar.png';
+                }}
+              />
+              <button 
+                onClick={handleDeleteImage} 
+                className="delete-image-button"
+                disabled={uploadingImage}
+                title="Remove photo"
+                aria-label="Remove profile photo"
+              >
+                <FaTrash />
+              </button>
+            </>
+          ) : (
+            <div className="default-avatar">
+              {getDefaultAvatar()}
+            </div>
+          )}
+          <div className="image-upload-container">
             <input
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
               className="image-upload"
               id="image-upload"
+              disabled={uploadingImage}
             />
-            <label htmlFor="image-upload" className="image-upload-label neomorphic-button">
-              Change Photo
+            <label 
+              htmlFor="image-upload" 
+              className={`image-upload-label ${uploadingImage ? 'uploading' : ''}`}
+              aria-label={uploadingImage ? 'Uploading...' : 'Change profile photo'}
+            >
+              {uploadingImage ? (
+                <>
+                  <div className="spinner"></div>
+                  <span>Uploading...</span>
+                </>
+              ) : (
+                <>
+                  <FaCamera className="camera-icon" />
+                  <span>Change Photo</span>
+                </>
+              )}
             </label>
-            {message && <div className="upload-message">{message}</div>}
-          </div>
-          <div className="profile-info">
-            <h1>{profileData.fullName || 'Your Name'}</h1>
-            <p className="major">
-              {profileData.major ? `${profileData.major}${profileData.graduationYear ? ` • Class of ${profileData.graduationYear}` : ''}` : 'Add your major and graduation year'}
-            </p>
-            <div className="social-links">
-              {Object.entries(profileData.socialLinks).map(([platform, url]) => {
-                if (!url) return null;
-                const Icon = {
-                  linkedin: FaLinkedin,
-                  github: FaGithub,
-                  twitter: FaTwitter,
-                  instagram: FaInstagram,
-                  portfolio: FaGlobe
-                }[platform];
-                return Icon ? (
-                  <a 
-                    key={platform}
-                    href={url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="social-icon neomorphic"
-                  >
-                    <Icon />
-                  </a>
-                ) : null;
-              })}
-            </div>
           </div>
         </div>
 
-        <div className="profile-body">
-          <form onSubmit={handleProfileUpdate}>
-            <div className="form-section neomorphic">
-              <h2>Basic Information</h2>
-              <input
-                type="text"
-                value={profileData.fullName}
-                onChange={(e) => setProfileData(prev => ({ ...prev, fullName: e.target.value }))}
-                placeholder="Full Name"
-                className="neomorphic-input"
-              />
-              <textarea
-                value={profileData.bio}
-                onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                placeholder="Bio"
-                className="neomorphic-input"
-              />
-              <input
-                type="text"
-                value={profileData.major}
-                onChange={(e) => setProfileData(prev => ({ ...prev, major: e.target.value }))}
-                placeholder="Major"
-                className="neomorphic-input"
-              />
-              <input
-                type="number"
-                value={profileData.graduationYear}
-                onChange={(e) => setProfileData(prev => ({ ...prev, graduationYear: e.target.value }))}
-                placeholder="Graduation Year"
-                className="neomorphic-input"
-              />
-            </div>
-
-            <div className="form-section neomorphic">
-              <h2>Social Links</h2>
-              {Object.keys(profileData.socialLinks).map(platform => (
-                <input
+        <div className="profile-info">
+          <h1>{profileData.fullName || 'Your Name'}</h1>
+          <p className="major">
+            {profileData.major} 
+            {profileData.graduationYear && ` • Class of ${profileData.graduationYear}`}
+          </p>
+          {profileData.bio && <p className="bio">{profileData.bio}</p>}
+          
+          {/* Social Media Icons */}
+          <div className="social-icons">
+            {Object.entries(profileData.socialLinks).map(([platform, url]) => (
+              url && (
+                <a
                   key={platform}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-icon"
+                  style={{ color: getSocialColor(platform) }}
+                  title={platform.charAt(0).toUpperCase() + platform.slice(1)}
+                >
+                  {getSocialIcon(platform)}
+                </a>
+              )
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Add this before the social media links section */}
+      <div className="resume-section">
+        <h3>Resume</h3>
+        <div className="resume-container">
+          {profileData.resume ? (
+            <div className="resume-preview">
+              <div className="resume-info">
+                <FaFile className="resume-icon" />
+                <span className="resume-name">{profileData.resume.name}</span>
+              </div>
+              <div className="resume-actions">
+                <a 
+                  href={profileData.resume.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="resume-download-button"
+                  title="Download Resume"
+                >
+                  <FaDownload />
+                  <span>Download</span>
+                </a>
+                <button
+                  onClick={handleDeleteResume}
+                  className="resume-delete-button"
+                  disabled={uploadingImage}
+                  title="Delete Resume"
+                >
+                  <FaTrash />
+                  <span>Delete</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="resume-upload">
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handleResumeUpload}
+                className="resume-input"
+                id="resume-upload"
+                disabled={uploadingImage}
+              />
+              <label 
+                htmlFor="resume-upload" 
+                className={`resume-upload-label ${uploadingImage ? 'uploading' : ''}`}
+              >
+                {uploadingImage ? (
+                  <>
+                    <div className="spinner"></div>
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <FaFileUpload className="upload-icon" />
+                    <span>Upload Resume (PDF)</span>
+                  </>
+                )}
+              </label>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="success-message">
+          {success}
+        </div>
+      )}
+
+      <form onSubmit={handleProfileUpdate} className="profile-form">
+        <div className="form-group">
+          <label htmlFor="fullName">Full Name</label>
+          <input
+            type="text"
+            id="fullName"
+            value={profileData.fullName}
+            onChange={(e) => setProfileData(prev => ({ ...prev, fullName: e.target.value }))}
+            placeholder="Enter your full name"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="bio">Bio</label>
+          <textarea
+            id="bio"
+            value={profileData.bio}
+            onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+            placeholder="Tell us about yourself"
+            rows="3"
+          />
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="major">Major</label>
+            <input
+              type="text"
+              id="major"
+              value={profileData.major}
+              onChange={(e) => setProfileData(prev => ({ ...prev, major: e.target.value }))}
+              placeholder="Your major"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="graduationYear">Graduation Year</label>
+            <input
+              type="number"
+              id="graduationYear"
+              value={profileData.graduationYear}
+              onChange={(e) => setProfileData(prev => ({ ...prev, graduationYear: e.target.value }))}
+              placeholder="2024"
+              min="2020"
+              max="2030"
+            />
+          </div>
+        </div>
+
+        {/* Social Media Links */}
+        <div className="social-links-section">
+          <h3>Social Media Links</h3>
+          <div className="social-links-grid">
+            {Object.entries(profileData.socialLinks).map(([platform, url]) => (
+              <div key={platform} className="social-link-item">
+                <div className="social-icon-label" style={{ color: getSocialColor(platform) }}>
+                  {getSocialIcon(platform)}
+                  <span>{platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
+                </div>
+                <input
                   type="url"
-                  value={profileData.socialLinks[platform]}
+                  value={url}
                   onChange={(e) => setProfileData(prev => ({ 
                     ...prev, 
                     socialLinks: { ...prev.socialLinks, [platform]: e.target.value }
                   }))}
-                  placeholder={`${platform.charAt(0).toUpperCase() + platform.slice(1)} URL`}
-                  className="neomorphic-input"
+                  placeholder={`Your ${platform} URL`}
                 />
-              ))}
-            </div>
-
-            <div className="form-section neomorphic">
-              <h2>Resume</h2>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={handleResumeUpload}
-                className="resume-upload"
-                id="resume-upload"
-              />
-              <label htmlFor="resume-upload" className="resume-upload-label neomorphic-button">
-                {profileData.resume ? 'Update Resume' : 'Upload Resume'}
-              </label>
-              {profileData.resume && (
-                <div className="resume-info">
-                  <a 
-                    href={profileData.resume} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="view-resume neomorphic-button"
-                  >
-                    View Current Resume
-                  </a>
-                  <span className="resume-filename">
-                    {profileData.resumeFileName || 'Resume'}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <button type="submit" className="save-button neomorphic-button">Save Changes</button>
-          </form>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {profileData.joinedClubs?.length > 0 && (
-          <div className="clubs-section neomorphic">
-            <h2>Club Memberships</h2>
-            <div className="clubs-grid">
-              {profileData.joinedClubs.map((club, index) => (
-                <div key={index} className="club-card neomorphic">
-                  <img src={club.clubLogo || 'default-club.png'} alt={club.clubName} className="neomorphic" />
-                  <h3>{club.clubName}</h3>
-                  <p>Joined: {new Date(club.joinDate).toLocaleDateString()}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {message && <div className="message neomorphic">{message}</div>}
-      </div>
+        <button type="submit" className="submit-button">
+          Save Profile
+        </button>
+      </form>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '../firebase/config';
 
 // Extract keywords from text using simple NLP techniques
 const extractKeywords = (text) => {

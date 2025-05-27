@@ -1,54 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // Users collection
-    match /users/{userId} {
-      allow read: if true;  // Allow public read for user profiles
-      allow create: if isAuthenticated();  // Allow authenticated users to create profile
-      allow update, delete: if isAuthenticated() && isOwner(userId);  // Only owner can modify their profile
-    }
-
-    // Clubs collection
-    match /clubs/{clubId} {
-      allow read: if true;  // Anyone can view clubs
-      allow create: if isAuthenticated();  // Authenticated users can create clubs
-      allow update: if isAuthenticated() && 
-        (resource.data.userId == request.auth.uid || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-      allow delete: if isAuthenticated() && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    // Preferences collection
-    match /preferences/{prefId} {
-      allow read: if isAuthenticated() && 
-        (resource.data.userId == request.auth.uid || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-      allow create: if isAuthenticated() && 
-        request.resource.data.userId == request.auth.uid;
-      allow update: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid;
-      allow delete: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid;
-    }
-
-    // Test collection (for development only - consider removing in production)
-    match /test_collection/{docId} {
-      allow read, write: if isAuthenticated();
-    }
-
-    // Default deny all other collections
+    // Allow read/write access to all users under any conditions
+    // Warning: This is for development only, make it more restrictive in production
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if true;
     }
   }
 } 

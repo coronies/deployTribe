@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { useAuth } from '../contexts/AuthContext';
 import { FiArrowLeft, FiStar, FiMapPin, FiDollarSign, FiList, FiSave, FiSend, FiTarget, FiClock } from 'react-icons/fi';
 import '../styles/CreationForm.css';
 import { checkDuplicateOpportunity } from '../utils/duplicateCheck';

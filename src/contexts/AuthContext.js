@@ -198,18 +198,41 @@ export function AuthProvider({ children }) {
     }
   }
 
-  function logout() {
-    return signOut(auth);
+  async function logout() {
+    try {
+      // Clean up state before signing out
+      setCurrentUser(null);
+      setSetupProgress(null);
+      setLoading(true);
+      
+      // Sign out from Firebase
+      await signOut(auth);
+      
+      // Additional cleanup if needed
+      setLoading(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setLoading(false);
+      throw error;
+    }
   }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        await refreshUserData(user);
-      } else {
+      try {
+        if (user) {
+          await refreshUserData(user);
+        } else {
+          setCurrentUser(null);
+          setSetupProgress(null);
+        }
+      } catch (error) {
+        console.error('Auth state change error:', error);
         setCurrentUser(null);
+        setSetupProgress(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return unsubscribe;

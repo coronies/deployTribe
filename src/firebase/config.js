@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -26,14 +26,24 @@ const storage = getStorage(app);
 
 // Connect to emulators in development
 if (process.env.NODE_ENV === 'development') {
+  connectAuthEmulator(auth, 'http://localhost:9099');
+  connectFirestoreEmulator(db, 'localhost', 8080);
   connectStorageEmulator(storage, 'localhost', 9199);
 }
 
-// Initialize analytics only in browser environment
+// Initialize analytics only in production and if supported
 let analytics = null;
-if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
-}
+const initAnalytics = async () => {
+  try {
+    if (process.env.NODE_ENV === 'production' && await isSupported()) {
+      analytics = getAnalytics(app);
+    }
+  } catch (error) {
+    console.warn('Analytics initialization failed:', error);
+  }
+};
+
+initAnalytics();
 
 export { auth, db, storage, analytics };
 export default app; 

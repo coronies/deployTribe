@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase';
-import { collection, query, getDocs, doc, getDoc } from 'firebase/firestore';
 import { calculateMatch } from '../utils/matchingAlgorithm';
 import '../styles/MatchResults.css';
 

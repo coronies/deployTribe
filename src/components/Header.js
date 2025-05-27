@@ -26,11 +26,20 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
+      setShowDropdown(false); // Close dropdown before logout
       await logout();
       navigate('/login');
     } catch (error) {
       console.error('Failed to log out:', error);
     }
+  };
+
+  // Helper function to safely get user initial
+  const getUserInitial = () => {
+    if (!currentUser) return '?';
+    if (currentUser.displayName) return currentUser.displayName[0].toUpperCase();
+    if (currentUser.email) return currentUser.email[0].toUpperCase();
+    return '?';
   };
 
   return (
@@ -44,30 +53,32 @@ const Header = () => {
           <Link to="/clubs">Explore Clubs</Link>
           <Link to="/events">Events</Link>
           <Link to="/opportunities">Opportunities</Link>
-          <div 
-            className="create-menu-wrapper"
-            ref={createMenuRef}
-          >
-            <button 
-              className="create-button"
-              onClick={() => setShowCreateMenu(!showCreateMenu)}
-              aria-expanded={showCreateMenu}
+          {currentUser && (
+            <div 
+              className="create-menu-wrapper"
+              ref={createMenuRef}
             >
-              <FiPlus /> Create
-            </button>
-            {showCreateMenu && (
-              <div className="create-dropdown">
-                <Link to="/manage/opportunities/create" onClick={() => setShowCreateMenu(false)}>
-                  <span className="icon">✨</span>
-                  Create Opportunity
-                </Link>
-                <Link to="/manage/events/create" onClick={() => setShowCreateMenu(false)}>
-                  <span className="icon">🎉</span>
-                  Create Event
-                </Link>
-              </div>
-            )}
-          </div>
+              <button 
+                className="create-button"
+                onClick={() => setShowCreateMenu(!showCreateMenu)}
+                aria-expanded={showCreateMenu}
+              >
+                <FiPlus /> Create
+              </button>
+              {showCreateMenu && (
+                <div className="create-dropdown">
+                  <Link to="/manage/opportunities/create" onClick={() => setShowCreateMenu(false)}>
+                    <span className="icon">✨</span>
+                    Create Opportunity
+                  </Link>
+                  <Link to="/manage/events/create" onClick={() => setShowCreateMenu(false)}>
+                    <span className="icon">🎉</span>
+                    Create Event
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
           <Link to="/quiz">Take Quiz</Link>
           {currentUser ? (
             <>
@@ -100,7 +111,7 @@ const Header = () => {
                   />
                 ) : (
                   <div className="profile-initial">
-                    {(currentUser.displayName || currentUser.email)[0].toUpperCase()}
+                    {getUserInitial()}
                   </div>
                 )}
               </button>

@@ -13,9 +13,429 @@ body {
 }
 
 .profile-container {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.profile-image-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.profile-image-container:hover .profile-image {
+  filter: brightness(0.9);
+}
+
+.image-upload-container {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.image-upload {
+  display: none;
+}
+
+.image-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #4299e1;
+  color: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+
+.image-upload-label:hover {
+  background-color: #3182ce;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.image-upload-label:active {
+  transform: translateY(0);
+}
+
+.image-upload-label.uploading {
+  background-color: #90cdf4;
+  cursor: not-allowed;
+}
+
+.camera-icon {
+  font-size: 16px;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Delete Button */
+.delete-image-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transform: scale(0.8);
+  z-index: 10;
+}
+
+.profile-image-container:hover .delete-image-button {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.delete-image-button:hover {
+  background-color: #dc2626;
+  transform: scale(1.1);
+}
+
+.delete-image-button:active {
+  transform: scale(0.95);
+}
+
+.delete-image-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: scale(1);
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-info h1 {
+  margin: 0;
+  font-size: 32px;
+  color: #1a202c;
+  font-weight: 600;
+}
+
+.major {
+  margin: 8px 0 0;
+  color: #4a5568;
+  font-size: 18px;
+}
+
+.bio {
+  margin: 12px 0 0;
+  color: #2d3748;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Social Media Icons */
+.social-icons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.social-icon:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.social-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  opacity: 0.1;
+  transition: opacity 0.3s ease;
+}
+
+.social-icon:hover::before {
+  opacity: 0.2;
+}
+
+.social-icon svg {
+  font-size: 20px;
+  z-index: 1;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #4a5568;
+}
+
+.error-message {
+  color: #e53e3e;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background-color: #fed7d7;
+  border: 1px solid #feb2b2;
+}
+
+.success-message {
+  color: #2f855a;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background-color: #c6f6d5;
+  border: 1px solid #9ae6b4;
+}
+
+.profile-form {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Social Links Section */
+.social-links-section {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-top: 30px;
+}
+
+.social-links-section h3 {
+  margin: 0 0 20px 0;
+  color: #2d3748;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.social-links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.social-link-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: all 0.3s ease;
+}
+
+.social-link-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.social-icon-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+}
+
+.social-icon-label svg {
+  font-size: 20px;
+}
+
+.social-icon-label span {
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.social-link-item input {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.social-link-item input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.submit-button {
+  background: #4299e1;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 20px;
+}
+
+.submit-button:hover {
+  background: #3182ce;
+  transform: translateY(-1px);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 15px;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .profile-image-container {
+    width: 120px;
+    height: 120px;
+  }
+
+  .profile-info h1 {
+    font-size: 28px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-form {
+    padding: 20px;
+  }
+
+  .social-links-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .social-link-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .social-icon-label {
+    min-width: auto;
+  }
+
+  .social-link-item input {
+    width: 100%;
+  }
 }
 
 .neomorphic {
@@ -82,261 +502,50 @@ body {
 }
 
 .profile-card {
-  overflow: hidden;
-  padding: 2rem;
-}
-
-.profile-header {
-  display: flex;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  gap: 2rem;
-}
-
-.profile-image-container {
-  position: relative;
-  width: 150px;
-  height: 150px;
-  margin: 0 auto;
-  border-radius: 50%;
+  background: var(--background-color, #fff);
+  border-radius: 15px;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.profile-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  transition: transform 0.3s ease;
-}
-
-.profile-image:hover {
-  transform: scale(1.05);
-}
-
-.image-upload {
-  display: none;
-}
-
-.image-upload-label {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  opacity: 0;
-}
-
-.profile-image-container:hover .image-upload-label {
-  opacity: 1;
-  bottom: 10px;
-}
-
-.upload-message {
-  margin-top: 10px;
+.profile-header {
   text-align: center;
-  color: #4299e1;
-  font-size: 0.9rem;
+  margin-bottom: 3rem;
 }
 
-.profile-info {
-  flex: 1;
-}
-
-.profile-info h1 {
-  color: var(--text-primary);
-  margin: 0 0 1rem 0;
+.profile-header h1 {
   font-size: 2.5rem;
-}
-
-.major {
-  color: var(--text-secondary);
-  font-size: 1.2rem;
-  margin: 0 0 1.5rem 0;
-}
-
-.social-links {
-  display: flex;
-  gap: 1rem;
-}
-
-.social-icon {
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: var(--accent-color);
-  font-size: 1.5rem;
-  transition: all 0.3s ease;
-}
-
-.social-icon:hover {
-  transform: translateY(-3px);
-  color: var(--text-primary);
-}
-
-.profile-body {
-  padding: 2rem 0;
-}
-
-.form-section {
-  padding: 2rem;
-  margin-bottom: 2rem;
-}
-
-.form-section h2 {
-  color: var(--text-primary);
-  margin-bottom: 1.5rem;
-  font-size: 1.5rem;
-}
-
-textarea.neomorphic-input {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.resume-upload {
-  display: none;
-}
-
-.resume-upload-label,
-.view-resume {
-  display: inline-block;
-  margin-right: 1rem;
-  text-decoration: none;
-}
-
-.clubs-section {
-  padding: 2rem;
-  margin-top: 2rem;
-}
-
-.clubs-section h2 {
-  color: var(--text-primary);
-  margin-bottom: 1.5rem;
-}
-
-.clubs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 2rem;
-}
-
-.club-card {
-  padding: 1.5rem;
-  text-align: center;
-  transition: transform 0.3s ease;
-}
-
-.club-card:hover {
-  transform: translateY(-5px);
-}
-
-.club-card img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  margin-bottom: 1rem;
-  object-fit: cover;
-}
-
-.club-card h3 {
-  color: var(--text-primary);
-  margin: 0.5rem 0;
-  font-size: 1.2rem;
-}
-
-.club-card p {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-.message {
-  margin-top: 2rem;
-  padding: 1rem;
-  text-align: center;
-  color: var(--accent-color);
-  font-weight: 500;
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-  font-size: 1.2rem;
-  color: var(--text-secondary);
-}
-
-@media (max-width: 768px) {
-  .profile-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .profile-image-container {
-    margin-bottom: 2rem;
-  }
-
-  .social-links {
-    justify-content: center;
-  }
-
-  .clubs-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
-}
-
-/* Stats Section */
-.profile-stats {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.profile-stats h3 {
-  color: #333;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.stat-item {
-  text-align: center;
-  padding: 1rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.stat-value {
-  display: block;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #007bff;
+  font-weight: 700;
+  color: #1a202c;
   margin-bottom: 0.5rem;
 }
 
-.stat-label {
-  color: #666;
-  font-size: 0.9rem;
+.profile-header p {
+  font-size: 1.1rem;
+  color: #718096;
+}
+
+.profile-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #4299e1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Badges Section */
@@ -482,4 +691,137 @@ textarea.neomorphic-input {
 
 .view-resume:hover {
   transform: translateY(-1px);
+}
+
+/* Resume Section */
+.resume-section {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin: 30px 0;
+}
+
+.resume-section h3 {
+  margin: 0 0 20px 0;
+  color: #2d3748;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.resume-container {
+  background: #f8fafc;
+  border: 2px dashed #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.resume-upload {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.resume-input {
+  display: none;
+}
+
+.resume-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 25px;
+  background-color: #4299e1;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.resume-upload-label:hover {
+  background-color: #3182ce;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.resume-upload-label.uploading {
+  background-color: #90cdf4;
+  cursor: not-allowed;
+}
+
+.resume-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.resume-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.resume-icon {
+  font-size: 24px;
+  color: #4299e1;
+}
+
+.resume-name {
+  font-size: 16px;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+.resume-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.resume-download-button,
+.resume-delete-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.resume-download-button {
+  background-color: #48bb78;
+  color: white;
+  text-decoration: none;
+}
+
+.resume-download-button:hover {
+  background-color: #38a169;
+  transform: translateY(-1px);
+}
+
+.resume-delete-button {
+  background-color: #ef4444;
+  color: white;
+}
+
+.resume-delete-button:hover {
+  background-color: #dc2626;
+  transform: translateY(-1px);
+}
+
+.resume-delete-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.upload-icon {
+  font-size: 20px;
 } 
