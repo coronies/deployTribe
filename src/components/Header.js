@@ -116,25 +116,23 @@ const Header = () => {
                 )}
               </button>
               
-              {showDropdown && (
-                <div className="dropdown-menu">
-                  <Link to="/profile" onClick={() => setShowDropdown(false)}>
-                    <FiUser /> Profile Settings
-                  </Link>
-                  <Link to="/my-clubs" onClick={() => setShowDropdown(false)}>
-                    <FiBook /> My Clubs
-                  </Link>
-                  <Link to="/my-events" onClick={() => setShowDropdown(false)}>
-                    <FiCalendar /> My Events
-                  </Link>
-                  <Link to="/settings" onClick={() => setShowDropdown(false)}>
-                    <FiSettings /> Account Settings
-                  </Link>
-                  <button onClick={handleLogout} className="logout-button">
-                    <FiLogOut /> Logout
-                  </button>
-                </div>
-              )}
+              <div className={`dropdown-menu ${showDropdown ? 'active' : ''}`}>
+                <Link to="/profile" onClick={() => setShowDropdown(false)}>
+                  <FiUser /> Profile Settings
+                </Link>
+                <Link to="/my-clubs" onClick={() => setShowDropdown(false)}>
+                  <FiBook /> My Clubs
+                </Link>
+                <Link to="/my-events" onClick={() => setShowDropdown(false)}>
+                  <FiCalendar /> My Events
+                </Link>
+                <Link to="/settings" onClick={() => setShowDropdown(false)}>
+                  <FiSettings /> Account Settings
+                </Link>
+                <button onClick={handleLogout} className="logout-button">
+                  <FiLogOut /> Logout
+                </button>
+              </div>
             </div>
           ) : (
             <div className="auth-buttons">
