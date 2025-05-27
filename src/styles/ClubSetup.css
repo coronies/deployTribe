@@ -385,27 +385,51 @@ select:focus {
   align-items: center;
   gap: 1rem;
   margin: 1rem 0;
+  width: 100%;
 }
 
 .progress-bar {
   flex: 1;
-  height: 8px;
-  background: var(--border-color);
-  border-radius: 4px;
+  height: 12px;
+  background: #f0f0f0;
+  border-radius: 6px;
   overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--primary-color);
-  transition: width 0.3s ease;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  background: linear-gradient(to right, 
+    var(--danger-color) 0%, 
+    var(--danger-color) 33%, 
+    #ffd700 33%, 
+    #ffd700 66%, 
+    var(--success-color) 66%, 
+    var(--success-color) 100%
+  );
+  background-size: 300% 100%;
+}
+
+.progress-fill[data-progress="low"] {
+  background-position: 0% 50%;
+}
+
+.progress-fill[data-progress="medium"] {
+  background-position: 50% 50%;
+}
+
+.progress-fill[data-progress="high"] {
+  background-position: 100% 50%;
 }
 
 .setup-progress span {
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-secondary);
   min-width: 80px;
+  text-align: right;
 }
 
 .save-button:disabled {
@@ -435,4 +459,83 @@ select:focus {
   .members-list {
     grid-template-columns: 1fr;
   }
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.form-group label::after {
+  content: " *";
+  color: var(--danger-color);
+}
+
+.form-group label:not([required])::after {
+  content: " (Optional)";
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+.meeting-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--primary-bg);
+  border-radius: var(--radius-md);
+}
+
+.day-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--secondary-bg);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.day-checkbox:hover {
+  background: var(--primary-bg);
+}
+
+.day-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 1rem;
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  background: var(--primary-color);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.submit-button:disabled {
+  background: var(--border-color);
+  cursor: not-allowed;
 } 

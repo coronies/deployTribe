@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useBeforeUnload } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db, storage } from '../firebase/config';
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { FaCamera, FaPlus, FaTimes, FaUserPlus, FaQuestionCircle } from 'react-icons/fa';
 import Calendar from 'react-calendar';
@@ -29,6 +29,24 @@ const { INTERESTS, COMMITMENT_LEVELS, EXPERIENCE_LEVELS } = {
   ]
 };
 
+const MEMBER_LIMIT_OPTIONS = [
+  { value: 10, label: '10 members' },
+  { value: 25, label: '25 members' },
+  { value: 50, label: '50 members' },
+  { value: 100, label: '100 members' },
+  { value: 500, label: '500+ members' }
+];
+
+const DAYS_OF_WEEK = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday'
+];
+
 const ClubSetup = () => {
   const navigate = useNavigate();
   const { currentUser, updateSetupProgress, completeSetup } = useAuth();
@@ -40,22 +58,16 @@ const ClubSetup = () => {
   const [clubData, setClubData] = useState({
     name: '',
     description: '',
+    memberLimit: '',
     tags: {
       interests: [],
       commitment: '',
-      experience: ''
+      experience: []
     },
-    profilePicture: null,
+    meetingDays: [],
     profilePictureUrl: '',
-    memberLimit: '',
-    requiresApplication: false,
-    acceptingMembers: true,
-    meetingTimes: {},
-    officers: [],
     members: [],
-    faqs: [{ question: '', answer: '' }],
-    president: currentUser?.uid,
-    createdAt: new Date().toISOString()
+    faqs: []
   });
 
   const [selectedDates, setSelectedDates] = useState([]);
@@ -79,34 +91,30 @@ const ClubSetup = () => {
 
   // Calculate setup progress
   const calculateProgress = () => {
-    let progress = 0;
-    const total = 6; // Total number of sections
+    let completedRequirements = 0;
+    const totalRequirements = 5; // name, memberLimit, interests, commitment, experience
 
-    // Basic info
-    if (clubData.name && clubData.description) progress++;
-    
-    // Profile picture
-    if (clubData.profilePictureUrl) progress++;
-    
-    // Tags
-    if (clubData.tags.interests.length > 0 && clubData.tags.commitment && clubData.tags.experience) progress++;
-    
-    // Meeting times
-    if (Object.keys(clubData.meetingTimes).length > 0) progress++;
-    
-    // Members
-    if (clubData.members.length > 0) progress++;
-    
-    // FAQs
-    if (clubData.faqs.some(faq => faq.question && faq.answer)) progress++;
+    // Check each required field
+    if (clubData.name) completedRequirements++;
+    if (clubData.memberLimit) completedRequirements++;
+    if (clubData.tags.interests.length >= 1 && clubData.tags.interests.length <= 5) completedRequirements++;
+    if (clubData.tags.commitment) completedRequirements++;
+    if (clubData.tags.experience.length > 0) completedRequirements++;
 
-    return Math.round((progress / total) * 100);
+    const progress = Math.round((completedRequirements / totalRequirements) * 100);
+    
+    // Return progress level for styling
+    let progressLevel = 'low';
+    if (progress >= 66) progressLevel = 'high';
+    else if (progress >= 33) progressLevel = 'medium';
+    
+    return { progress, progressLevel };
   };
 
   // Update progress whenever club data changes
   useEffect(() => {
     if (isDirty) {
-      const progress = calculateProgress();
+      const { progress } = calculateProgress();
       updateSetupProgress(progress);
     }
   }, [clubData, isDirty, updateSetupProgress]);
@@ -131,7 +139,6 @@ const ClubSetup = () => {
       
       setClubData(prev => ({
         ...prev,
-        profilePicture: file,
         profilePictureUrl: downloadURL
       }));
     } catch (error) {
@@ -147,9 +154,10 @@ const ClubSetup = () => {
       ...prev,
       tags: {
         ...prev.tags,
-        [category]: Array.isArray(value) ? value : [value]
+        [category]: value
       }
     }));
+    setIsDirty(true);
   };
 
   const handleDateChange = (date) => {
@@ -166,7 +174,7 @@ const ClubSetup = () => {
 
     setClubData(prev => ({
       ...prev,
-      meetingTimes: selectedDates
+      meetingDays: selectedDates
     }));
   };
 
@@ -252,24 +260,34 @@ const ClubSetup = () => {
     }));
   };
 
+  const toggleMeetingDay = (day) => {
+    setClubData(prev => ({
+      ...prev,
+      meetingDays: prev.meetingDays.includes(day)
+        ? prev.meetingDays.filter(d => d !== day)
+        : [...prev.meetingDays, day]
+    }));
+    setIsDirty(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      if (!clubData.name || !clubData.description) {
-        throw new Error('Please fill in all required fields');
+      const { progress } = calculateProgress();
+      if (progress < 100) {
+        throw new Error('Please complete all required fields');
       }
 
-      if (!clubData.tags.interests.length) {
-        throw new Error('Please select at least one interest tag');
-      }
-
+      // Create club document
       const clubRef = doc(collection(db, 'clubs'));
       await setDoc(clubRef, {
         ...clubData,
-        updatedAt: new Date().toISOString()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdBy: currentUser.uid
       });
 
       await completeSetup();
@@ -277,7 +295,7 @@ const ClubSetup = () => {
       setIsDirty(false);
       
       setTimeout(() => {
-        navigate(`/club/${clubRef.id}`);
+        navigate('/club-dashboard');
       }, 2000);
     } catch (error) {
       console.error('Error creating club:', error);
@@ -287,6 +305,8 @@ const ClubSetup = () => {
     }
   };
 
+  const { progress, progressLevel } = calculateProgress();
+
   return (
     <div className="club-setup-container">
       <div className="setup-header">
@@ -295,121 +315,53 @@ const ClubSetup = () => {
           <div className="progress-bar">
             <div 
               className="progress-fill" 
-              style={{ width: `${calculateProgress()}%` }}
+              style={{ width: `${progress}%` }}
+              data-progress={progressLevel}
             />
           </div>
-          <span>{calculateProgress()}% Complete</span>
+          <span>{progress}%</span>
         </div>
-        <button 
-          className="save-button"
-          onClick={handleSubmit}
-          disabled={loading || calculateProgress() < 100}
-        >
-          {loading ? 'Creating...' : calculateProgress() < 100 ? 'Complete All Sections' : 'Create Club'}
-        </button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">Club created successfully! Redirecting...</div>}
 
       <form onSubmit={handleSubmit} className="setup-form">
-        <div className="setup-section profile-section">
-          <h2>Profile Picture</h2>
-          <div className="profile-picture-upload">
-            {clubData.profilePictureUrl ? (
-              <img src={clubData.profilePictureUrl} alt="Club profile" />
-            ) : (
-              <div className="upload-placeholder">
-                <FaCamera className="icon" />
-                <span>Upload Picture</span>
-              </div>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleProfilePictureChange}
-              className="file-input"
-            />
-          </div>
-        </div>
-
         <div className="setup-section">
           <h2>Basic Information</h2>
-          <div className="basic-info-grid">
-            <div className="info-item">
-              <label>Club Name</label>
-              <input
-                type="text"
-                value={clubData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Enter club name"
-                required
-              />
-            </div>
-
-            <div className="info-item">
-              <label>Member Limit</label>
-              <input
-                type="number"
-                value={clubData.memberLimit}
-                onChange={(e) => handleInputChange('memberLimit', e.target.value)}
-                placeholder="Enter member limit"
-                min="1"
-              />
-            </div>
-
-            <div className="info-item">
-              <label>Application Required?</label>
-              <div className="radio-group">
-                <label>
-                  <input
-                    type="radio"
-                    checked={clubData.requiresApplication}
-                    onChange={() => handleInputChange('requiresApplication', true)}
-                  />
-                  Yes
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    checked={!clubData.requiresApplication}
-                    onChange={() => handleInputChange('requiresApplication', false)}
-                  />
-                  No
-                </label>
-              </div>
-            </div>
-
-            <div className="info-item">
-              <label>Accepting New Members?</label>
-              <div className="radio-group">
-                <label>
-                  <input
-                    type="radio"
-                    checked={clubData.acceptingMembers}
-                    onChange={() => handleInputChange('acceptingMembers', true)}
-                  />
-                  Yes
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    checked={!clubData.acceptingMembers}
-                    onChange={() => handleInputChange('acceptingMembers', false)}
-                  />
-                  No
-                </label>
-              </div>
-            </div>
+          <div className="form-group">
+            <label>Club Name *</label>
+            <input
+              type="text"
+              value={clubData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="Enter club name"
+              required
+            />
           </div>
 
-          <div className="info-item">
-            <label>Club Description</label>
+          <div className="form-group">
+            <label>Member Limit *</label>
+            <select
+              value={clubData.memberLimit}
+              onChange={(e) => handleInputChange('memberLimit', e.target.value)}
+              required
+            >
+              <option value="">Select member limit</option>
+              {MEMBER_LIMIT_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Club Description (Optional)</label>
             <textarea
               value={clubData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Enter club description"
-              required
               rows={5}
             />
           </div>
@@ -419,161 +371,63 @@ const ClubSetup = () => {
           <h2>Club Tags</h2>
           <div className="tags-section">
             <div className="tag-category">
-              <h3>Interests</h3>
+              <h3>Interests * (1-5 tags)</h3>
               <TagSelector
                 options={INTERESTS}
                 selected={clubData.tags.interests}
                 onChange={(values) => handleTagChange('interests', values)}
                 multiple
                 max={5}
+                required
               />
             </div>
 
             <div className="tag-category">
-              <h3>Time Commitment</h3>
+              <h3>Time Commitment *</h3>
               <TagSelector
                 options={COMMITMENT_LEVELS}
                 selected={clubData.tags.commitment}
                 onChange={(value) => handleTagChange('commitment', value)}
+                required
               />
             </div>
 
             <div className="tag-category">
-              <h3>Experience Level</h3>
+              <h3>Experience Level *</h3>
               <TagSelector
                 options={EXPERIENCE_LEVELS}
                 selected={clubData.tags.experience}
-                onChange={(value) => handleTagChange('experience', value)}
+                onChange={(values) => handleTagChange('experience', values)}
+                multiple
+                required
               />
             </div>
           </div>
         </div>
 
         <div className="setup-section">
-          <h2>Meeting Times</h2>
-          <div className="calendar-section">
-            <Calendar
-              onChange={handleDateChange}
-              value={selectedDates.map(date => new Date(date))}
-              selectRange={false}
-              className="meeting-calendar"
-              tileClassName={({ date }) => {
-                const dateStr = date.toISOString().split('T')[0];
-                return selectedDates.includes(dateStr) ? 'selected-date' : '';
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="setup-section">
-          <h2>Members & Officers</h2>
-          <div className="members-section">
-            <div className="members-list">
-              {clubData.members.map(member => (
-                <div key={member.id} className="member-card">
-                  <img
-                    src={member.photoUrl || '/default-avatar.png'}
-                    alt={member.name}
-                    className="member-avatar"
-                  />
-                  <div className="member-info">
-                    <h3>{member.name}</h3>
-                    <p>{member.email}</p>
-                    <p className="member-role">{member.role}</p>
-                  </div>
-                  {member.id !== currentUser.uid && (
-                    <button
-                      type="button"
-                      className="remove-button"
-                      onClick={() => handleRemoveMember(member.id)}
-                    >
-                      <FaTimes /> Remove
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="add-member-section">
-              <button
-                type="button"
-                className="add-button"
-                onClick={() => setShowAddMember(true)}
-              >
-                <FaUserPlus /> Add Member
-              </button>
-
-              {showAddMember && (
-                <div className="add-member-form">
-                  <input
-                    type="email"
-                    placeholder="Member Email"
-                    value={newMember.email}
-                    onChange={(e) => setNewMember(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                  <select
-                    value={newMember.role}
-                    onChange={(e) => setNewMember(prev => ({ ...prev, role: e.target.value }))}
-                  >
-                    <option value="member">Member</option>
-                    <option value="officer">Officer</option>
-                  </select>
-                  <div className="form-actions">
-                    <button type="button" onClick={handleAddMember}>Add</button>
-                    <button
-                      type="button"
-                      className="cancel-button"
-                      onClick={() => setShowAddMember(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="setup-section">
-          <h2>Frequently Asked Questions</h2>
-          <div className="faqs-section">
-            {clubData.faqs.map((faq, index) => (
-              <div key={index} className="faq-item">
-                <div className="faq-header">
-                  <FaQuestionCircle className="faq-icon" />
-                  <button
-                    type="button"
-                    className="remove-button"
-                    onClick={() => handleRemoveFAQ(index)}
-                  >
-                    <FaTimes />
-                  </button>
-                </div>
+          <h2>Meeting Days (Optional)</h2>
+          <div className="meeting-days">
+            {DAYS_OF_WEEK.map(day => (
+              <label key={day} className="day-checkbox">
                 <input
-                  type="text"
-                  placeholder="Question"
-                  value={faq.question}
-                  onChange={(e) => handleFAQChange(index, 'question', e.target.value)}
-                  className="faq-input"
+                  type="checkbox"
+                  checked={clubData.meetingDays.includes(day)}
+                  onChange={() => toggleMeetingDay(day)}
                 />
-                <textarea
-                  placeholder="Answer"
-                  value={faq.answer}
-                  onChange={(e) => handleFAQChange(index, 'answer', e.target.value)}
-                  className="faq-answer"
-                  rows={3}
-                />
-              </div>
+                {day}
+              </label>
             ))}
-            <button
-              type="button"
-              className="add-button"
-              onClick={handleAddFAQ}
-            >
-              <FaPlus /> Add FAQ
-            </button>
           </div>
         </div>
+
+        <button 
+          type="submit" 
+          className="submit-button"
+          disabled={loading || progress < 100}
+        >
+          {loading ? 'Creating...' : progress < 100 ? 'Complete Required Fields' : 'Create Club'}
+        </button>
       </form>
     </div>
   );
