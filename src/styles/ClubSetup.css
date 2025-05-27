@@ -794,4 +794,86 @@ select:focus {
     padding: 0.5rem;
     font-size: 0.85rem;
   }
+}
+
+.validation-errors {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(244, 67, 54, 0.1);
+  border-left: 4px solid var(--danger-color);
+  border-radius: var(--radius-md);
+}
+
+.validation-errors h3 {
+  color: var(--danger-color);
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.validation-errors ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: var(--text-primary);
+}
+
+.validation-errors li {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
+  border-color: var(--danger-color);
+  background-color: rgba(244, 67, 54, 0.05);
+}
+
+.form-group input.error:focus,
+.form-group select.error:focus,
+.form-group textarea.error:focus {
+  border-color: var(--danger-color);
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.1);
+}
+
+.field-error {
+  color: var(--danger-color);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.submit-button:disabled {
+  background: var(--border-color);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.submit-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Show progress bar only during initial setup */
+.club-setup-container:not(.editing) .setup-progress {
+  display: flex;
+}
+
+.club-setup-container.editing .setup-progress {
+  display: none;
+}
+
+/* Required field styles */
+.form-group label[required]::after,
+.form-group label[data-required="true"]::after {
+  content: " *";
+  color: var(--danger-color);
+}
+
+/* Optional field styles */
+.form-group label:not([required]):not([data-required="true"])::after {
+  content: " (Optional)";
+  color: var(--text-secondary);
+  font-weight: normal;
 } 

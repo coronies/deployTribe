@@ -91,6 +91,7 @@ const ClubSetup = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState({});
   const [existingClub, setExistingClub] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
 
   const [clubData, setClubData] = useState({
     name: '',
@@ -112,6 +113,34 @@ const ClubSetup = () => {
   const [newMember, setNewMember] = useState({ name: '', email: '', role: 'member' });
   const [showAddOfficer, setShowAddOfficer] = useState(false);
   const [newOfficer, setNewOfficer] = useState({ name: '', role: '', email: '' });
+
+  // Validate required fields
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!clubData.name.trim()) {
+      errors.name = 'Club name is required';
+    }
+    
+    if (!clubData.memberLimit) {
+      errors.memberLimit = 'Member limit is required';
+    }
+    
+    if (!clubData.tags.interests || clubData.tags.interests.length === 0) {
+      errors.interests = 'At least one interest tag is required';
+    }
+    
+    if (!clubData.tags.commitment) {
+      errors.commitment = 'Time commitment is required';
+    }
+    
+    if (!clubData.tags.experience || clubData.tags.experience.length === 0) {
+      errors.experience = 'Experience level is required';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // Load existing club data if it exists
   useEffect(() => {
@@ -188,10 +217,31 @@ const ClubSetup = () => {
   }, [clubData, isDirty, updateSetupProgress]);
 
   const handleInputChange = (field, value) => {
-    setClubData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setClubData(prev => {
+      const newData = field.includes('tags.') 
+        ? {
+            ...prev,
+            tags: {
+              ...prev.tags,
+              [field.split('.')[1]]: value
+            }
+          }
+        : {
+            ...prev,
+            [field]: value
+          };
+      
+      // Clear validation error when field is updated
+      if (validationErrors[field]) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
+      
+      return newData;
+    });
     setIsDirty(true);
   };
 
@@ -356,15 +406,16 @@ const ClubSetup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      const { progress } = calculateProgress();
-      if (progress < 100) {
-        throw new Error('Please complete all required fields');
-      }
-
       if (existingClub) {
         // Update existing club
         const clubRef = doc(db, 'clubs', existingClub.id);
@@ -404,26 +455,41 @@ const ClubSetup = () => {
     return <div className="club-setup-container loading">Loading...</div>;
   }
 
+  const isFormValid = Object.keys(validationErrors).length === 0;
+
   return (
     <div className="club-setup-container">
       <div className="setup-header">
         <h1>{existingClub ? 'Edit Club' : 'Create Your Club'}</h1>
-        <div className="setup-progress">
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${progress}%` }}
-              data-progress={progressLevel}
-            />
+        {!existingClub && (
+          <div className="setup-progress">
+            <div className="progress-bar">
+              <div 
+                className="progress-fill" 
+                style={{ width: `${progress}%` }}
+                data-progress={progressLevel}
+              />
+            </div>
+            <span>{progress}%</span>
           </div>
-          <span>{progress}%</span>
-        </div>
+        )}
       </div>
 
       {error && <div className="error-message">{error}</div>}
       {success && (
         <div className="success-message">
           {existingClub ? 'Club updated successfully!' : 'Club created successfully!'} Redirecting...
+        </div>
+      )}
+
+      {Object.keys(validationErrors).length > 0 && (
+        <div className="validation-errors">
+          <h3>Please fix the following errors:</h3>
+          <ul>
+            {Object.entries(validationErrors).map(([field, message]) => (
+              <li key={field}>{message}</li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -483,10 +549,10 @@ const ClubSetup = () => {
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="Enter club name"
               required
-              className={!clubData.name ? 'error' : ''}
+              className={validationErrors.name ? 'error' : ''}
             />
-            {!clubData.name && (
-              <div className="field-error">Club name is required</div>
+            {validationErrors.name && (
+              <div className="field-error">{validationErrors.name}</div>
             )}
           </div>
 
@@ -496,6 +562,7 @@ const ClubSetup = () => {
               value={clubData.memberLimit}
               onChange={(e) => handleInputChange('memberLimit', e.target.value)}
               required
+              className={validationErrors.memberLimit ? 'error' : ''}
             >
               <option value="">Select member limit</option>
               {MEMBER_LIMIT_OPTIONS.map(option => (
@@ -504,6 +571,9 @@ const ClubSetup = () => {
                 </option>
               ))}
             </select>
+            {validationErrors.memberLimit && (
+              <div className="field-error">{validationErrors.memberLimit}</div>
+            )}
           </div>
 
           <div className="form-group">
@@ -573,10 +643,10 @@ const ClubSetup = () => {
         <button 
           type="submit" 
           className="submit-button"
-          disabled={loading || progress < 100}
+          disabled={loading || !isFormValid || Object.keys(validationErrors).length > 0}
         >
           {loading ? (existingClub ? 'Saving...' : 'Creating...') : 
-           progress < 100 ? 'Complete Required Fields' : 
+           !isFormValid ? 'Please Fill Required Fields' : 
            existingClub ? 'Save Changes' : 'Create Club'}
         </button>
       </form>
