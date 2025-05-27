@@ -1,8 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getAnalytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
@@ -24,19 +24,16 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Comment out emulator connections for now
-// if (window.location.hostname === 'localhost') {
-//   connectAuthEmulator(auth, 'http://localhost:9099');
-//   connectFirestoreEmulator(db, 'localhost', 8080);
-//   connectStorageEmulator(storage, 'localhost', 9199);
-// }
+// Connect to emulators in development
+if (process.env.NODE_ENV === 'development') {
+  connectStorageEmulator(storage, 'localhost', 9199);
+}
 
 // Initialize analytics only in browser environment
 let analytics = null;
 if (typeof window !== 'undefined') {
   analytics = getAnalytics(app);
 }
-export { analytics };
 
-export { auth, db, storage };
+export { auth, db, storage, analytics };
 export default app; 
