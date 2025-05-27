@@ -538,4 +538,199 @@ select:focus {
 .submit-button:disabled {
   background: var(--border-color);
   cursor: not-allowed;
+}
+
+/* Time Selection Styles */
+.time-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.time-day-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05),
+              0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.time-day-section:hover {
+  transform: translateY(-2px);
+}
+
+.time-day-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.time-day-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.time-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.time-slot-btn {
+  all: unset;
+  cursor: pointer;
+  padding: 12px;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+/* Monday */
+.time-slot-btn.monday:hover {
+  background: #e8f5e9;
+  border-color: #4CAF50;
+  color: #2e7d32;
+}
+
+.time-slot-btn.monday.selected {
+  background: #4CAF50;
+  border-color: #4CAF50;
+  color: white;
+}
+
+/* Tuesday */
+.time-slot-btn.tuesday:hover {
+  background: #ffebee;
+  border-color: #F44336;
+  color: #c62828;
+}
+
+.time-slot-btn.tuesday.selected {
+  background: #F44336;
+  border-color: #F44336;
+  color: white;
+}
+
+/* Wednesday */
+.time-slot-btn.wednesday:hover {
+  background: #f3e5f5;
+  border-color: #9C27B0;
+  color: #7b1fa2;
+}
+
+.time-slot-btn.wednesday.selected {
+  background: #9C27B0;
+  border-color: #9C27B0;
+  color: white;
+}
+
+/* Thursday */
+.time-slot-btn.thursday:hover {
+  background: #fff3e0;
+  border-color: #FF9800;
+  color: #f57c00;
+}
+
+.time-slot-btn.thursday.selected {
+  background: #FF9800;
+  border-color: #FF9800;
+  color: white;
+}
+
+/* Friday */
+.time-slot-btn.friday:hover {
+  background: #e3f2fd;
+  border-color: #2196F3;
+  color: #1976d2;
+}
+
+.time-slot-btn.friday.selected {
+  background: #2196F3;
+  border-color: #2196F3;
+  color: white;
+}
+
+/* Saturday */
+.time-slot-btn.saturday:hover {
+  background: #fce4ec;
+  border-color: #E91E63;
+  color: #c2185b;
+}
+
+.time-slot-btn.saturday.selected {
+  background: #E91E63;
+  border-color: #E91E63;
+  color: white;
+}
+
+/* Sunday */
+.time-slot-btn.sunday:hover {
+  background: #ede7f6;
+  border-color: #673AB7;
+  color: #512da8;
+}
+
+.time-slot-btn.sunday.selected {
+  background: #673AB7;
+  border-color: #673AB7;
+  color: white;
+}
+
+/* Active state for all buttons */
+.time-slot-btn:active {
+  transform: scale(0.98);
+}
+
+/* Selection Animation */
+.time-slot-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.time-slot-btn:active::before {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .time-grid {
+    padding: 0 0.5rem;
+  }
+
+  .time-day-section {
+    padding: 1rem;
+  }
+
+  .time-slots-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .time-slot-btn {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
 } 

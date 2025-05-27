@@ -47,13 +47,49 @@ const DAYS_OF_WEEK = [
   'Saturday'
 ];
 
-const ClubSetup = () => {
+const TIME_SLOTS = [
+  { id: 1, time: '9:00 - 11:00', period: 'Morning' },
+  { id: 2, time: '11:00 - 13:00', period: 'Morning' },
+  { id: 3, time: '13:00 - 15:00', period: 'Afternoon' },
+  { id: 4, time: '15:00 - 17:00', period: 'Afternoon' },
+  { id: 5, time: '17:00 - 19:00', period: 'Evening' },
+  { id: 6, time: '19:00 - 21:00', period: 'Evening' }
+];
+
+const DaySection = ({ day, selectedSlots, onSlotSelect }) => {
+  return (
+    <div className="time-day-section">
+      <div className="time-day-header">
+        <h3>{day}</h3>
+      </div>
+      <div className="time-slots-grid">
+        {TIME_SLOTS.map((slot) => (
+          <button
+            key={slot.id}
+            onClick={() => {
+              const newSelected = selectedSlots.includes(slot.time)
+                ? selectedSlots.filter(time => time !== slot.time)
+                : [...selectedSlots, slot.time];
+              onSlotSelect(day.toLowerCase(), newSelected);
+            }}
+            className={`time-slot-btn ${day.toLowerCase()} ${selectedSlots.includes(slot.time) ? 'selected' : ''}`}
+          >
+            {slot.time}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) => {
   const navigate = useNavigate();
   const { currentUser, updateSetupProgress, completeSetup } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState({});
 
   const [clubData, setClubData] = useState({
     name: '',
@@ -64,7 +100,7 @@ const ClubSetup = () => {
       commitment: '',
       experience: []
     },
-    meetingDays: [],
+    meetingTimes: {},
     profilePictureUrl: '',
     members: [],
     faqs: []
@@ -75,6 +111,14 @@ const ClubSetup = () => {
   const [newMember, setNewMember] = useState({ name: '', email: '', role: 'member' });
   const [showAddOfficer, setShowAddOfficer] = useState(false);
   const [newOfficer, setNewOfficer] = useState({ name: '', role: '', email: '' });
+
+  // Load initial data if in edit mode
+  useEffect(() => {
+    if (isEditMode && initialData) {
+      setClubData(initialData);
+      setSelectedTimeSlots(initialData.meetingTimes || {});
+    }
+  }, [isEditMode, initialData]);
 
   // Add beforeunload event listener
   useBeforeUnload(
@@ -174,8 +218,27 @@ const ClubSetup = () => {
 
     setClubData(prev => ({
       ...prev,
-      meetingDays: selectedDates
+      meetingTimes: {
+        ...prev.meetingTimes,
+        [date.toISOString().split('T')[0]]: []
+      }
     }));
+  };
+
+  const handleTimeSelection = (day, times) => {
+    setSelectedTimeSlots(prev => ({
+      ...prev,
+      [day]: times
+    }));
+    
+    setClubData(prev => ({
+      ...prev,
+      meetingTimes: {
+        ...prev.meetingTimes,
+        [day]: times
+      }
+    }));
+    setIsDirty(true);
   };
 
   const handleAddMember = async () => {
@@ -260,16 +323,6 @@ const ClubSetup = () => {
     }));
   };
 
-  const toggleMeetingDay = (day) => {
-    setClubData(prev => ({
-      ...prev,
-      meetingDays: prev.meetingDays.includes(day)
-        ? prev.meetingDays.filter(d => d !== day)
-        : [...prev.meetingDays, day]
-    }));
-    setIsDirty(true);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -281,24 +334,38 @@ const ClubSetup = () => {
         throw new Error('Please complete all required fields');
       }
 
-      // Create club document
-      const clubRef = doc(collection(db, 'clubs'));
-      await setDoc(clubRef, {
-        ...clubData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        createdBy: currentUser.uid
-      });
+      if (isEditMode && clubId) {
+        // Update existing club
+        const clubRef = doc(db, 'clubs', clubId);
+        await updateDoc(clubRef, {
+          ...clubData,
+          updatedAt: serverTimestamp()
+        });
+        setSuccess(true);
+        setIsDirty(false);
+        setTimeout(() => {
+          navigate('/club-dashboard');
+        }, 2000);
+      } else {
+        // Create new club
+        const clubRef = doc(collection(db, 'clubs'));
+        await setDoc(clubRef, {
+          ...clubData,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          createdBy: currentUser.uid
+        });
 
-      await completeSetup();
-      setSuccess(true);
-      setIsDirty(false);
-      
-      setTimeout(() => {
-        navigate('/club-dashboard');
-      }, 2000);
+        await completeSetup();
+        setSuccess(true);
+        setIsDirty(false);
+        
+        setTimeout(() => {
+          navigate('/club-dashboard');
+        }, 2000);
+      }
     } catch (error) {
-      console.error('Error creating club:', error);
+      console.error('Error saving club:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -310,7 +377,7 @@ const ClubSetup = () => {
   return (
     <div className="club-setup-container">
       <div className="setup-header">
-        <h1>Create Your Club</h1>
+        <h1>{isEditMode ? 'Edit Club' : 'Create Your Club'}</h1>
         <div className="setup-progress">
           <div className="progress-bar">
             <div 
@@ -324,7 +391,11 @@ const ClubSetup = () => {
       </div>
 
       {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">Club created successfully! Redirecting...</div>}
+      {success && (
+        <div className="success-message">
+          {isEditMode ? 'Club updated successfully!' : 'Club created successfully!'} Redirecting...
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="setup-form">
         <div className="setup-section">
@@ -406,17 +477,16 @@ const ClubSetup = () => {
         </div>
 
         <div className="setup-section">
-          <h2>Meeting Days (Optional)</h2>
-          <div className="meeting-days">
+          <h2>Meeting Times</h2>
+          <p className="section-description">Select when your club typically meets</p>
+          <div className="time-grid">
             {DAYS_OF_WEEK.map(day => (
-              <label key={day} className="day-checkbox">
-                <input
-                  type="checkbox"
-                  checked={clubData.meetingDays.includes(day)}
-                  onChange={() => toggleMeetingDay(day)}
-                />
-                {day}
-              </label>
+              <DaySection
+                key={day}
+                day={day}
+                selectedSlots={selectedTimeSlots[day.toLowerCase()] || []}
+                onSlotSelect={handleTimeSelection}
+              />
             ))}
           </div>
         </div>
@@ -426,7 +496,9 @@ const ClubSetup = () => {
           className="submit-button"
           disabled={loading || progress < 100}
         >
-          {loading ? 'Creating...' : progress < 100 ? 'Complete Required Fields' : 'Create Club'}
+          {loading ? (isEditMode ? 'Saving...' : 'Creating...') : 
+           progress < 100 ? 'Complete Required Fields' : 
+           isEditMode ? 'Save Changes' : 'Create Club'}
         </button>
       </form>
     </div>

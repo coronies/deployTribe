@@ -6,6 +6,7 @@ import Header from './components/Header';
 import Login from './components/Login';
 import Register from './components/Register';
 import ClubSetup from './components/ClubSetup';
+import ClubSettings from './components/ClubSettings';
 import StudentDashboard from './components/StudentDashboard';
 import ClubDashboard from './components/ClubDashboard';
 import Profile from './components/Profile';
@@ -54,6 +55,7 @@ function App() {
               <Route path="/about" element={<SetupRoute><About /></SetupRoute>} />
               <Route path="/how-it-works" element={<SetupRoute><HowItWorks /></SetupRoute>} />
               <Route path="/club-setup" element={<SetupRoute><ClubSetup /></SetupRoute>} />
+              <Route path="/club-settings" element={<SetupRoute><ClubSettings /></SetupRoute>} />
               <Route path="/student-dashboard" element={<SetupRoute><StudentDashboard /></SetupRoute>} />
               <Route path="/club-dashboard" element={<SetupRoute><ClubDashboard /></SetupRoute>} />
               <Route path="/profile" element={<SetupRoute><Profile /></SetupRoute>} />

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { FiUser, FiSettings, FiBook, FiCalendar, FiLogOut, FiPlus } from 'react-icons/fi';
+import { FiUser, FiSettings, FiBook, FiCalendar, FiLogOut, FiPlus, FiEdit } from 'react-icons/fi';
 import '../styles/Header.css';
 
 const Header = () => {
@@ -10,11 +10,18 @@ const Header = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const createMenuRef = useRef(null);
+  const profileMenuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Handle create menu click outside
       if (createMenuRef.current && !createMenuRef.current.contains(event.target)) {
         setShowCreateMenu(false);
+      }
+      
+      // Handle profile menu click outside
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowDropdown(false);
       }
     };
 
@@ -94,7 +101,7 @@ const Header = () => {
 
         <div className="user-section">
           {currentUser ? (
-            <div className="user-menu">
+            <div className="user-menu" ref={profileMenuRef}>
               <button 
                 className="profile-button"
                 onClick={() => setShowDropdown(!showDropdown)}
@@ -125,6 +132,9 @@ const Header = () => {
                 </Link>
                 <Link to="/my-events" onClick={() => setShowDropdown(false)}>
                   <FiCalendar /> My Events
+                </Link>
+                <Link to="/club-settings" onClick={() => setShowDropdown(false)}>
+                  <FiEdit /> Club Settings
                 </Link>
                 <Link to="/settings" onClick={() => setShowDropdown(false)}>
                   <FiSettings /> Account Settings
