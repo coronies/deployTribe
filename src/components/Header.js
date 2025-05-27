@@ -133,7 +133,7 @@ const Header = () => {
                 <Link to="/my-events" onClick={() => setShowDropdown(false)}>
                   <FiCalendar /> My Events
                 </Link>
-                <Link to="/club-settings" onClick={() => setShowDropdown(false)}>
+                <Link to="/club-setup" onClick={() => setShowDropdown(false)}>
                   <FiEdit /> Club Settings
                 </Link>
                 <Link to="/settings" onClick={() => setShowDropdown(false)}>

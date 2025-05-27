@@ -82,7 +82,7 @@ const DaySection = ({ day, selectedSlots, onSlotSelect }) => {
   );
 };
 
-const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) => {
+const ClubSetup = () => {
   const navigate = useNavigate();
   const { currentUser, updateSetupProgress, completeSetup } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -90,6 +90,7 @@ const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) =>
   const [success, setSuccess] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState({});
+  const [existingClub, setExistingClub] = useState(null);
 
   const [clubData, setClubData] = useState({
     name: '',
@@ -112,13 +113,36 @@ const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) =>
   const [showAddOfficer, setShowAddOfficer] = useState(false);
   const [newOfficer, setNewOfficer] = useState({ name: '', role: '', email: '' });
 
-  // Load initial data if in edit mode
+  // Load existing club data if it exists
   useEffect(() => {
-    if (isEditMode && initialData) {
-      setClubData(initialData);
-      setSelectedTimeSlots(initialData.meetingTimes || {});
-    }
-  }, [isEditMode, initialData]);
+    const fetchExistingClub = async () => {
+      if (!currentUser) return;
+
+      try {
+        setLoading(true);
+        const clubsQuery = query(
+          collection(db, 'clubs'),
+          where('createdBy', '==', currentUser.uid)
+        );
+        
+        const querySnapshot = await getDocs(clubsQuery);
+        if (!querySnapshot.empty) {
+          const clubDoc = querySnapshot.docs[0];
+          const clubData = { id: clubDoc.id, ...clubDoc.data() };
+          setExistingClub(clubData);
+          setClubData(clubData);
+          setSelectedTimeSlots(clubData.meetingTimes || {});
+        }
+      } catch (error) {
+        console.error('Error fetching club:', error);
+        setError('Failed to load club data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExistingClub();
+  }, [currentUser]);
 
   // Add beforeunload event listener
   useBeforeUnload(
@@ -175,9 +199,15 @@ const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) =>
     const file = e.target.files[0];
     if (!file) return;
 
+    // Only accept image files
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file');
+      return;
+    }
+
     try {
       setLoading(true);
-      const storageRef = ref(storage, `clubProfilePictures/${Date.now()}_${file.name}`);
+      const storageRef = ref(storage, `clubProfilePictures/${currentUser.uid}_${Date.now()}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
       
@@ -185,6 +215,7 @@ const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) =>
         ...prev,
         profilePictureUrl: downloadURL
       }));
+      setIsDirty(true);
     } catch (error) {
       console.error('Error uploading profile picture:', error);
       setError('Failed to upload profile picture');
@@ -334,18 +365,13 @@ const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) =>
         throw new Error('Please complete all required fields');
       }
 
-      if (isEditMode && clubId) {
+      if (existingClub) {
         // Update existing club
-        const clubRef = doc(db, 'clubs', clubId);
+        const clubRef = doc(db, 'clubs', existingClub.id);
         await updateDoc(clubRef, {
           ...clubData,
           updatedAt: serverTimestamp()
         });
-        setSuccess(true);
-        setIsDirty(false);
-        setTimeout(() => {
-          navigate('/club-dashboard');
-        }, 2000);
       } else {
         // Create new club
         const clubRef = doc(collection(db, 'clubs'));
@@ -355,15 +381,15 @@ const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) =>
           updatedAt: serverTimestamp(),
           createdBy: currentUser.uid
         });
-
         await completeSetup();
-        setSuccess(true);
-        setIsDirty(false);
-        
-        setTimeout(() => {
-          navigate('/club-dashboard');
-        }, 2000);
       }
+
+      setSuccess(true);
+      setIsDirty(false);
+      
+      setTimeout(() => {
+        navigate('/club-dashboard');
+      }, 2000);
     } catch (error) {
       console.error('Error saving club:', error);
       setError(error.message);
@@ -374,10 +400,14 @@ const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) =>
 
   const { progress, progressLevel } = calculateProgress();
 
+  if (loading && !clubData.name) {
+    return <div className="club-setup-container loading">Loading...</div>;
+  }
+
   return (
     <div className="club-setup-container">
       <div className="setup-header">
-        <h1>{isEditMode ? 'Edit Club' : 'Create Your Club'}</h1>
+        <h1>{existingClub ? 'Edit Club' : 'Create Your Club'}</h1>
         <div className="setup-progress">
           <div className="progress-bar">
             <div 
@@ -393,22 +423,71 @@ const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) =>
       {error && <div className="error-message">{error}</div>}
       {success && (
         <div className="success-message">
-          {isEditMode ? 'Club updated successfully!' : 'Club created successfully!'} Redirecting...
+          {existingClub ? 'Club updated successfully!' : 'Club created successfully!'} Redirecting...
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="setup-form">
         <div className="setup-section">
           <h2>Basic Information</h2>
+          
+          <div className="profile-section">
+            <div className="profile-picture-upload">
+              {clubData.profilePictureUrl ? (
+                <img 
+                  src={clubData.profilePictureUrl} 
+                  alt="Club Profile" 
+                  className="profile-preview"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/default-club-avatar.png';
+                  }}
+                />
+              ) : (
+                <div className="upload-placeholder">
+                  <FaCamera className="icon" />
+                  <span>Upload Club Picture</span>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureChange}
+                className="file-input"
+                aria-label="Upload club picture"
+              />
+            </div>
+            {clubData.profilePictureUrl && (
+              <button
+                type="button"
+                className="remove-picture-button"
+                onClick={() => {
+                  setClubData(prev => ({
+                    ...prev,
+                    profilePictureUrl: ''
+                  }));
+                  setIsDirty(true);
+                }}
+              >
+                Remove Picture
+              </button>
+            )}
+          </div>
+
           <div className="form-group">
-            <label>Club Name *</label>
+            <label htmlFor="clubName">Club Name *</label>
             <input
+              id="clubName"
               type="text"
               value={clubData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="Enter club name"
               required
+              className={!clubData.name ? 'error' : ''}
             />
+            {!clubData.name && (
+              <div className="field-error">Club name is required</div>
+            )}
           </div>
 
           <div className="form-group">
@@ -496,9 +575,9 @@ const ClubSetup = ({ isEditMode = false, initialData = null, clubId = null }) =>
           className="submit-button"
           disabled={loading || progress < 100}
         >
-          {loading ? (isEditMode ? 'Saving...' : 'Creating...') : 
+          {loading ? (existingClub ? 'Saving...' : 'Creating...') : 
            progress < 100 ? 'Complete Required Fields' : 
-           isEditMode ? 'Save Changes' : 'Create Club'}
+           existingClub ? 'Save Changes' : 'Create Club'}
         </button>
       </form>
     </div>

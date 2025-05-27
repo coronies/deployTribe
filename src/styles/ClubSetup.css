@@ -85,20 +85,28 @@ body {
 
 .profile-section {
   text-align: center;
+  margin-bottom: 2rem;
 }
 
 .profile-picture-upload {
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
-  margin: 0 auto 2rem;
+  margin: 0 auto 1rem;
   position: relative;
   overflow: hidden;
   background: var(--primary-bg);
   box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.profile-picture-upload img {
+.profile-picture-upload:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.profile-picture-upload img.profile-preview {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -111,23 +119,76 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  background: var(--primary-bg);
   color: var(--text-secondary);
 }
 
 .upload-placeholder .icon {
-  font-size: 2.5rem;
+  font-size: 2rem;
   margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+.upload-placeholder span {
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 0 0.5rem;
 }
 
 .file-input {
   position: absolute;
-  width: 100%;
-  height: 100%;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
   opacity: 0;
   cursor: pointer;
+}
+
+.remove-picture-button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--danger-color);
+  background: transparent;
+  border: 1px solid var(--danger-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.remove-picture-button:hover {
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.form-group input.error,
+.form-group select.error {
+  border-color: var(--danger-color);
+}
+
+.field-error {
+  color: var(--danger-color);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Required field indicator */
+.form-group label[for="clubName"]::after {
+  content: " *";
+  color: var(--danger-color);
+}
+
+/* Optional field indicator */
+.form-group label:not([for="clubName"])::after {
+  content: " (Optional)";
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+/* Hide optional indicator for required fields */
+.form-group label[required]::after {
+  content: " *" !important;
+  color: var(--danger-color) !important;
 }
 
 .basic-info-grid {
