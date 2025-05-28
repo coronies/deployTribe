@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { testUserAuth } from '../firebase/test';
-import '../styles/Login.css';
+import '../styles/Auth.css';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -37,12 +36,12 @@ function Login() {
       // Navigate based on user type and setup status
       if (user.userType === 'club') {
         if (!user.isSetupComplete) {
-          navigate('/club-setup', { replace: true });
+          navigate('/club-setup');
         } else {
-          navigate('/club-dashboard', { replace: true });
+          navigate('/club-dashboard');
         }
       } else if (user.userType === 'student') {
-        navigate('/student-dashboard', { replace: true });
+        navigate('/student-dashboard');
       } else {
         throw new Error('Invalid user type');
       }
@@ -74,60 +73,58 @@ function Login() {
     }
   };
 
-  const handleTest = async () => {
-    try {
-      setLoading(true);
-      const result = await testUserAuth(formData.email, formData.password);
-      if (result.success) {
-        setError('Test successful: ' + result.message);
-      } else {
-        setError('Test failed: ' + result.error);
-      }
-    } catch (error) {
-      setError('Test error: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="login-container">
-      <h2>Login</h2>
-      
-      {error && <div className="error-message">{error}</div>}
-      
-      <form onSubmit={handleSubmit} className="login-form">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleInputChange}
-          required
-        />
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Login</h2>
         
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleInputChange}
-          required
-        />
+        {error && <div className="error-message">{error}</div>}
+        
+        <form onSubmit={handleSubmit} className="auth-form" noValidate>
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+              placeholder="Enter your email"
+              aria-required="true"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+              placeholder="Enter your password"
+              aria-required="true"
+            />
+          </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
+          <button 
+            type="submit" 
+            className="submit-button"
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
 
-        <button type="button" onClick={handleTest} disabled={loading}>
-          Test Login
-        </button>
-      </form>
-
-      <div className="auth-links">
-        <p>
-          Don't have an account? <Link to="/register">Register here</Link>
-        </p>
+        <div className="auth-links">
+          <p>
+            Don't have an account? <Link to="/register">Register here</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

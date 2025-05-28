@@ -82,7 +82,7 @@ const DaySection = ({ day, selectedSlots, onSlotSelect }) => {
   );
 };
 
-const ClubSetup = () => {
+const ClubSetup = ({ isSettings = false }) => {
   const navigate = useNavigate();
   const { currentUser, updateSetupProgress, completeSetup } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -161,6 +161,10 @@ const ClubSetup = () => {
           setExistingClub(clubData);
           setClubData(clubData);
           setSelectedTimeSlots(clubData.meetingTimes || {});
+          validateForm();
+        } else if (isSettings) {
+          // If in settings mode but no club data exists, redirect to dashboard
+          navigate('/club-dashboard');
         }
       } catch (error) {
         console.error('Error fetching club:', error);
@@ -171,7 +175,7 @@ const ClubSetup = () => {
     };
 
     fetchExistingClub();
-  }, [currentUser]);
+  }, [currentUser, isSettings, navigate]);
 
   // Add beforeunload event listener
   useBeforeUnload(
@@ -218,27 +222,33 @@ const ClubSetup = () => {
 
   const handleInputChange = (field, value) => {
     setClubData(prev => {
-      const newData = field.includes('tags.') 
-        ? {
-            ...prev,
-            tags: {
-              ...prev.tags,
-              [field.split('.')[1]]: value
-            }
+      let newData;
+      if (field.includes('tags.')) {
+        const tagField = field.split('.')[1];
+        newData = {
+          ...prev,
+          tags: {
+            ...prev.tags,
+            [tagField]: value
           }
-        : {
-            ...prev,
-            [field]: value
-          };
+        };
+      } else {
+        newData = {
+          ...prev,
+          [field]: value
+        };
+      }
       
       // Clear validation error when field is updated
-      if (validationErrors[field]) {
-        setValidationErrors(prev => {
-          const newErrors = { ...prev };
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        if (field.includes('tags.')) {
+          delete newErrors[field.split('.')[1]];
+        } else {
           delete newErrors[field];
-          return newErrors;
-        });
-      }
+        }
+        return newErrors;
+      });
       
       return newData;
     });
@@ -416,21 +426,24 @@ const ClubSetup = () => {
     setError('');
 
     try {
+      const dataToSave = {
+        ...clubData,
+        meetingTimes: selectedTimeSlots,
+        updatedAt: serverTimestamp()
+      };
+
       if (existingClub) {
         // Update existing club
         const clubRef = doc(db, 'clubs', existingClub.id);
-        await updateDoc(clubRef, {
-          ...clubData,
-          updatedAt: serverTimestamp()
-        });
+        await updateDoc(clubRef, dataToSave);
       } else {
         // Create new club
         const clubRef = doc(collection(db, 'clubs'));
         await setDoc(clubRef, {
-          ...clubData,
+          ...dataToSave,
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          createdBy: currentUser.uid
+          createdBy: currentUser.uid,
+          isSetupComplete: true
         });
         await completeSetup();
       }
@@ -439,7 +452,7 @@ const ClubSetup = () => {
       setIsDirty(false);
       
       setTimeout(() => {
-        navigate('/club-dashboard');
+        navigate(isSettings ? '/club-dashboard' : '/club-dashboard');
       }, 2000);
     } catch (error) {
       console.error('Error saving club:', error);
@@ -458,10 +471,10 @@ const ClubSetup = () => {
   const isFormValid = Object.keys(validationErrors).length === 0;
 
   return (
-    <div className="club-setup-container">
+    <div className={`club-setup-container ${isSettings ? 'editing' : ''}`}>
       <div className="setup-header">
-        <h1>{existingClub ? 'Edit Club' : 'Create Your Club'}</h1>
-        {!existingClub && (
+        <h1>{isSettings ? 'Club Settings' : 'Create Your Club'}</h1>
+        {!isSettings && !existingClub && (
           <div className="setup-progress">
             <div className="progress-bar">
               <div 
@@ -478,7 +491,7 @@ const ClubSetup = () => {
       {error && <div className="error-message">{error}</div>}
       {success && (
         <div className="success-message">
-          {existingClub ? 'Club updated successfully!' : 'Club created successfully!'} Redirecting...
+          {isSettings ? 'Club settings updated successfully!' : 'Club created successfully!'} Redirecting...
         </div>
       )}
 
@@ -645,9 +658,9 @@ const ClubSetup = () => {
           className="submit-button"
           disabled={loading || !isFormValid || Object.keys(validationErrors).length > 0}
         >
-          {loading ? (existingClub ? 'Saving...' : 'Creating...') : 
+          {loading ? (isSettings ? 'Saving...' : 'Creating...') : 
            !isFormValid ? 'Please Fill Required Fields' : 
-           existingClub ? 'Save Changes' : 'Create Club'}
+           isSettings ? 'Save Changes' : 'Create Club'}
         </button>
       </form>
     </div>

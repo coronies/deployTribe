@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase/config';
@@ -13,14 +13,20 @@ function ClubDashboard() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadClubData();
-  }, [loadClubData]);
+  const loadClubData = useCallback(async () => {
+    if (!currentUser || currentUser.userType !== 'club') {
+      navigate('/');
+      return;
+    }
 
-  const loadClubData = async () => {
     try {
       // Load club profile data
       const clubDoc = await getDoc(doc(db, 'clubs', currentUser.uid));
+      if (!clubDoc.exists()) {
+        console.error('Club document not found');
+        navigate('/');
+        return;
+      }
       setClubData(clubDoc.data());
 
       // Load pending applications
@@ -53,7 +59,11 @@ function ClubDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser, navigate]);
+
+  useEffect(() => {
+    loadClubData();
+  }, [loadClubData]);
 
   const handleApplicationResponse = async (applicationId, status) => {
     try {
@@ -106,18 +116,22 @@ function ClubDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="dashboard-container">
-        <div className="loading-spinner" />
-      </div>
-    );
+    return <div className="dashboard-loading">Loading...</div>;
+  }
+
+  if (!clubData) {
+    return <div className="dashboard-error">Error loading club data</div>;
   }
 
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
         <h1>Welcome, {clubData?.name || 'Club Admin'}!</h1>
-        <p className="last-active">Last updated: {new Date(clubData?.lastUpdated || Date.now()).toLocaleDateString()}</p>
+        <div className="header-actions">
+          <button onClick={() => navigate('/club-settings')} className="settings-button">
+            Edit Club Settings
+          </button>
+        </div>
       </div>
 
       <div className="dashboard-grid">
@@ -125,23 +139,20 @@ function ClubDashboard() {
         <div className="dashboard-card quick-actions">
           <h2>Quick Actions</h2>
           <div className="action-buttons">
-            <button onClick={() => navigate('/club/edit-profile')}>
+            <button onClick={() => navigate('/club-settings')}>
               Edit Club Profile
             </button>
-            <button onClick={() => navigate('/club/create-event')}>
+            <button onClick={() => navigate('/manage/events/create')}>
               Create Event
             </button>
-            <button onClick={() => navigate('/club/applications')}>
-              View Applications
-            </button>
-            <button onClick={() => navigate('/club/members')}>
-              Manage Members
+            <button onClick={() => navigate('/manage/opportunities/create')}>
+              Create Opportunity
             </button>
           </div>
         </div>
 
         {/* Club Stats */}
-        <div className="dashboard-card club-stats">
+        <div className="dashboard-card stats">
           <h2>Club Statistics</h2>
           <div className="stats-grid">
             <div className="stat-item">
@@ -203,75 +214,48 @@ function ClubDashboard() {
         </div>
 
         {/* Recent Applications */}
-        <div className="dashboard-card recent-applications">
-          <h2>Recent Applications</h2>
-          <div className="applications-list">
-            {applications.slice(0, 3).map((app, index) => (
-              <div key={index} className="application-item">
-                <div className="application-info">
-                  <h3>{app.studentName}</h3>
-                  <p>Applied: {new Date(app.date).toLocaleDateString()}</p>
-                </div>
-                <div className="application-actions">
-                  <button 
-                    className="accept-button"
-                    onClick={() => handleApplicationResponse(app.id, 'accepted')}
-                  >
-                    Accept
-                  </button>
-                  <button 
-                    className="reject-button"
-                    onClick={() => handleApplicationResponse(app.id, 'rejected')}
-                  >
-                    Reject
+        {applications.length > 0 && (
+          <div className="dashboard-card applications">
+            <h2>Recent Applications</h2>
+            <div className="applications-list">
+              {applications.slice(0, 5).map(app => (
+                <div key={app.id} className="application-item">
+                  <span>{app.studentName}</span>
+                  <span>{new Date(app.appliedDate).toLocaleDateString()}</span>
+                  <button onClick={() => navigate(`/applications/${app.id}`)}>
+                    Review
                   </button>
                 </div>
-              </div>
-            ))}
-            {applications.length === 0 && (
-              <p className="no-applications">No pending applications</p>
+              ))}
+            </div>
+            {applications.length > 5 && (
+              <button onClick={() => navigate('/applications')} className="view-all">
+                View All Applications
+              </button>
             )}
           </div>
-          {applications.length > 3 && (
-            <button 
-              className="view-all-button"
-              onClick={() => navigate('/club/applications')}
-            >
-              View All Applications
-            </button>
-          )}
-        </div>
+        )}
 
         {/* Upcoming Events */}
-        <div className="dashboard-card upcoming-events">
-          <h2>Upcoming Events</h2>
-          <div className="events-list">
-            {events.slice(0, 3).map((event, index) => (
-              <div key={index} className="event-item">
-                <div className="event-info">
+        {events.length > 0 && (
+          <div className="dashboard-card events">
+            <h2>Upcoming Events</h2>
+            <div className="events-list">
+              {events.slice(0, 3).map(event => (
+                <div key={event.id} className="event-item">
                   <h3>{event.title}</h3>
-                  <p>{new Date(event.date).toLocaleDateString()}</p>
-                  <p>{event.attendees?.length || 0} attendees registered</p>
+                  <p>{event.description}</p>
+                  <span>{new Date(event.date).toLocaleDateString()}</span>
                 </div>
-                <button 
-                  className="manage-event-button"
-                  onClick={() => navigate(`/club/events/${event.id}`)}
-                >
-                  Manage
-                </button>
-              </div>
-            ))}
-            {events.length === 0 && (
-              <p className="no-events">No upcoming events</p>
+              ))}
+            </div>
+            {events.length > 3 && (
+              <button onClick={() => navigate('/manage-events')} className="view-all">
+                View All Events
+              </button>
             )}
           </div>
-          <button 
-            className="create-event-button"
-            onClick={() => navigate('/club/create-event')}
-          >
-            Create New Event
-          </button>
-        </div>
+        )}
 
         {/* Member Activity */}
         <div className="dashboard-card member-activity">

@@ -51,6 +51,11 @@
   color: #e5e7eb;
 }
 
+/* Hide the (Optional) text that browsers might add */
+.form-group label::after {
+  display: none !important;
+}
+
 .form-input {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -142,4 +147,22 @@ textarea.form-input {
 
 .auth-links a:hover {
   text-decoration: underline;
+}
+
+/* Additional styles to prevent browser from showing (Optional) text */
+input:required,
+select:required {
+  box-shadow: none;
+}
+
+input:required:invalid,
+select:required:invalid {
+  box-shadow: none;
+}
+
+/* Hide any browser-generated validation messages */
+input::-webkit-validation-bubble-message,
+input::-webkit-validation-bubble,
+input::-webkit-validation-bubble-arrow-clipper {
+  display: none;
 } 

@@ -31,6 +31,7 @@ import ManagementDashboard from './components/ManagementDashboard';
 import CreateOpportunity from './components/CreateOpportunity';
 import CreateEvent from './components/CreateEvent';
 import SetupRoute from './components/SetupRoute';
+import AccountSettings from './components/AccountSettings';
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
               <Route path="/about" element={<SetupRoute><About /></SetupRoute>} />
               <Route path="/how-it-works" element={<SetupRoute><HowItWorks /></SetupRoute>} />
               <Route path="/club-setup" element={<SetupRoute><ClubSetup /></SetupRoute>} />
+              <Route path="/club-settings" element={<SetupRoute><ClubSetup isSettings={true} /></SetupRoute>} />
               <Route path="/student-dashboard" element={<SetupRoute><StudentDashboard /></SetupRoute>} />
               <Route path="/club-dashboard" element={<SetupRoute><ClubDashboard /></SetupRoute>} />
               <Route path="/profile" element={<SetupRoute><Profile /></SetupRoute>} />
@@ -61,6 +63,7 @@ function App() {
               <Route path="/my-events" element={<SetupRoute><MyEvents /></SetupRoute>} />
               <Route path="/manage-events" element={<SetupRoute><ManageEvents /></SetupRoute>} />
               <Route path="/test" element={<SetupRoute><FirebaseTest /></SetupRoute>} />
+              <Route path="/settings" element={<SetupRoute><AccountSettings /></SetupRoute>} />
               <Route path="/test-club" element={<SetupRoute><TestClub /></SetupRoute>} />
               <Route path="/seed" element={<SetupRoute><SeedData /></SetupRoute>} />
               <Route path="/admin" element={<SetupRoute><AdminTools /></SetupRoute>} />

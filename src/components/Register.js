@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/Auth.css';
 
@@ -27,9 +27,9 @@ function Register() {
     confirmPassword: '',
     name: '',
     clubName: '',
-    description: '',
     university: ''
   });
+  const [validationErrors, setValidationErrors] = useState({});
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -37,59 +37,75 @@ function Register() {
       ...prev,
       [name]: value
     }));
+    // Clear validation error when field is updated
+    setValidationErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[name];
+      return newErrors;
+    });
   };
 
   const validateEmail = (email) => {
-    // Check if email ends with .edu
-    if (!email.toLowerCase().endsWith('.edu')) {
-      return false;
+    if (!email) {
+      return 'Email is required';
     }
-    // Additional university-specific email validation could be added here
-    return true;
+    if (!email.includes('@')) {
+      return 'Invalid email format';
+    }
+    if (!email.toLowerCase().endsWith('.edu')) {
+      return 'Please use your university email address (.edu)';
+    }
+    return null;
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    // Common validations
+    if (!formData.university) {
+      errors.university = 'Please select your university';
+    }
+
+    const emailError = validateEmail(formData.email);
+    if (emailError) {
+      errors.email = emailError;
+    }
+
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    // User type specific validations
+    if (userType === 'student') {
+      if (!formData.name) {
+        errors.name = 'Full name is required';
+      }
+    } else if (userType === 'club') {
+      if (!formData.clubName) {
+        errors.clubName = 'Club name is required';
+      } else if (formData.clubName.length < 3) {
+        errors.clubName = 'Club name must be at least 3 characters';
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validate university selection
-    if (!formData.university) {
-      setError('Please select your university');
+    if (!validateForm()) {
       return;
-    }
-
-    // Validate .edu email
-    if (!validateEmail(formData.email)) {
-      setError('Please use your university email address (.edu)');
-      return;
-    }
-
-    // Password validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    // User type specific validation
-    if (userType === 'student' && !formData.name) {
-      setError('Please enter your name');
-      return;
-    }
-
-    if (userType === 'club') {
-      if (!formData.clubName) {
-        setError('Please enter club name');
-        return;
-      }
-      if (!formData.description) {
-        setError('Please enter club description');
-        return;
-      }
     }
 
     try {
@@ -97,7 +113,6 @@ function Register() {
       await signup(formData.email, formData.password, userType, {
         name: formData.name,
         clubName: formData.clubName,
-        description: formData.description,
         university: formData.university,
         universityName: UNIVERSITIES.find(u => u.id === formData.university)?.name
       });
@@ -110,7 +125,27 @@ function Register() {
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setError('Failed to create an account: ' + error.message);
+      let errorMessage = 'Failed to create an account';
+      
+      // Handle specific Firebase auth errors
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'An account with this email already exists';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Account creation is currently disabled';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password is too weak';
+          break;
+        default:
+          errorMessage = error.message || 'Failed to create account';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -123,7 +158,18 @@ function Register() {
         
         {error && <div className="error-message">{error}</div>}
         
-        <form onSubmit={handleSubmit} className="auth-form">
+        {Object.keys(validationErrors).length > 0 && (
+          <div className="validation-errors">
+            <h3>Please fix the following errors:</h3>
+            <ul>
+              {Object.entries(validationErrors).map(([field, message]) => (
+                <li key={field}>{message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="form-group">
             <label>Account Type</label>
             <div className="user-type-toggle">
@@ -145,13 +191,15 @@ function Register() {
           </div>
 
           <div className="form-group">
-            <label>University</label>
+            <label htmlFor="university">University</label>
             <select
+              id="university"
               name="university"
               value={formData.university}
               onChange={handleInputChange}
               required
-              className="form-input"
+              className={`form-input ${validationErrors.university ? 'error' : ''}`}
+              aria-required="true"
             >
               <option value="">Select your university</option>
               {UNIVERSITIES.map(uni => (
@@ -160,97 +208,117 @@ function Register() {
                 </option>
               ))}
             </select>
+            {validationErrors.university && (
+              <div className="field-error">{validationErrors.university}</div>
+            )}
           </div>
 
           <div className="form-group">
-            <label>University Email</label>
+            <label htmlFor="email">University Email</label>
             <input
+              id="email"
               type="email"
               name="email"
               value={formData.email}
               onChange={handleInputChange}
               required
-              className="form-input"
+              className={`form-input ${validationErrors.email ? 'error' : ''}`}
               placeholder="your.email@university.edu"
+              aria-required="true"
             />
+            {validationErrors.email && (
+              <div className="field-error">{validationErrors.email}</div>
+            )}
           </div>
 
           {userType === 'student' ? (
             <div className="form-group">
-              <label>Full Name</label>
+              <label htmlFor="name">Full Name</label>
               <input
+                id="name"
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
                 required
-                className="form-input"
+                className={`form-input ${validationErrors.name ? 'error' : ''}`}
                 placeholder="Enter your full name"
+                aria-required="true"
               />
+              {validationErrors.name && (
+                <div className="field-error">{validationErrors.name}</div>
+              )}
             </div>
           ) : (
-            <>
-              <div className="form-group">
-                <label>Club Name</label>
-                <input
-                  type="text"
-                  name="clubName"
-                  value={formData.clubName}
-                  onChange={handleInputChange}
-                  required
-                  className="form-input"
-                  placeholder="Enter club name"
-                />
-              </div>
-              <div className="form-group">
-                <label>Club Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                  className="form-input"
-                  placeholder="Brief description of your club"
-                  rows="3"
-                />
-              </div>
-            </>
+            <div className="form-group">
+              <label htmlFor="clubName">Club Name</label>
+              <input
+                id="clubName"
+                type="text"
+                name="clubName"
+                value={formData.clubName}
+                onChange={handleInputChange}
+                required
+                className={`form-input ${validationErrors.clubName ? 'error' : ''}`}
+                placeholder="Enter club name"
+                aria-required="true"
+              />
+              {validationErrors.clubName && (
+                <div className="field-error">{validationErrors.clubName}</div>
+              )}
+            </div>
           )}
 
           <div className="form-group">
-            <label>Password</label>
+            <label htmlFor="password">Password</label>
             <input
+              id="password"
               type="password"
               name="password"
               value={formData.password}
               onChange={handleInputChange}
               required
-              className="form-input"
+              className={`form-input ${validationErrors.password ? 'error' : ''}`}
               placeholder="Create a password"
+              aria-required="true"
             />
+            {validationErrors.password && (
+              <div className="field-error">{validationErrors.password}</div>
+            )}
           </div>
 
           <div className="form-group">
-            <label>Confirm Password</label>
+            <label htmlFor="confirmPassword">Confirm Password</label>
             <input
+              id="confirmPassword"
               type="password"
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleInputChange}
               required
-              className="form-input"
+              className={`form-input ${validationErrors.confirmPassword ? 'error' : ''}`}
               placeholder="Confirm your password"
+              aria-required="true"
             />
+            {validationErrors.confirmPassword && (
+              <div className="field-error">{validationErrors.confirmPassword}</div>
+            )}
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
+          <button 
+            type="submit" 
             className="submit-button"
+            disabled={loading || Object.keys(validationErrors).length > 0}
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
+
+        <div className="auth-links">
+          <p>
+            Already have an account? <Link to="/login">Login here</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

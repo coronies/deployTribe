@@ -25,13 +25,22 @@ const SetupRoute = ({ children }) => {
 
       // For club accounts:
       if (!loading && currentUser?.userType === 'club') {
-        // If setup is complete, allow access to requested page
-        if (currentUser?.clubData?.isSetupComplete) {
+        // If no club data exists yet, redirect to setup
+        if (!currentUser.clubData) {
+          if (location.pathname !== '/club-setup') {
+            navigate('/club-setup');
+          }
+          return;
+        }
+
+        // If setup is complete and trying to access /club-setup, redirect to dashboard
+        if (currentUser.clubData.isSetupComplete && location.pathname === '/club-setup') {
+          navigate('/club-dashboard');
           return;
         }
 
         // If setup is not complete:
-        if (!currentUser?.clubData?.isSetupComplete) {
+        if (!currentUser.clubData.isSetupComplete) {
           // Allow access only to login/register pages
           if (ALLOWED_PATHS.includes(location.pathname)) {
             return;
@@ -40,6 +49,7 @@ const SetupRoute = ({ children }) => {
           // If not on setup page, redirect to setup
           if (location.pathname !== '/club-setup') {
             navigate('/club-setup');
+            return;
           }
         }
       }
