@@ -1,75 +1,167 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase/config';
-import { doc, updateDoc, arrayUnion, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, getDoc, collection, getDocs, setDoc, query, orderBy } from 'firebase/firestore';
 import '../styles/Events.css';
 import { Link } from 'react-router-dom';
+import { FaChevronDown } from 'react-icons/fa';
+import { seedAllData } from '../utils/seedData';
 
-// Sample events data
-const SAMPLE_EVENTS = [
-  {
-    id: 'event1',
-    title: 'Tech Startup Workshop',
-    clubId: 'club1',
-    clubName: 'Entrepreneurship Society',
-    date: '2024-04-15T14:00:00',
-    location: 'Innovation Hub - Room 201',
-    description: 'Join us for an intensive workshop on launching your tech startup. Learn from successful founders and industry experts.',
-    imageUrl: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b',
-    category: 'Workshop',
-    capacity: 50,
-    attendees: [],
-    requirements: 'Laptop recommended',
-    price: 'Free'
+// Import categories from Quiz component
+const CATEGORIES = {
+  Technology: {
+    label: 'Technology',
+    subtags: [
+      'Software Development',
+      'Web Development',
+      'AI',
+      'Cybersecurity',
+      'Data Science',
+      'Mobile Development',
+      'Game Development',
+      'IoT'
+    ]
   },
-  {
-    id: 'event2',
-    title: 'Annual Hackathon 2024',
-    clubId: 'club2',
-    clubName: 'Code Club',
-    date: '2024-04-20T09:00:00',
-    location: 'Computer Science Building',
-    description: '24-hour hackathon focused on AI and machine learning projects. Great prizes and networking opportunities!',
-    imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d',
-    category: 'Competition',
-    capacity: 100,
-    attendees: [],
-    requirements: 'Basic programming knowledge',
-    price: '$10'
+  Business: {
+    label: 'Business',
+    subtags: [
+      'Entrepreneurship',
+      'Marketing',
+      'Finance',
+      'Management',
+      'Consulting',
+      'Investment'
+    ]
   },
-  {
-    id: 'event3',
-    title: 'Cultural Night Festival',
-    clubId: 'club3',
-    clubName: 'International Students Association',
-    date: '2024-04-25T18:00:00',
-    location: 'Student Center - Grand Hall',
-    description: 'Experience diverse cultures through food, music, dance, and traditional performances.',
-    imageUrl: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3',
-    category: 'Social',
-    capacity: 200,
-    attendees: [],
-    requirements: 'None',
-    price: '$15'
+  'Arts & Culture': {
+    label: 'Arts & Culture',
+    subtags: [
+      'Music',
+      'Dance',
+      'Photography',
+      'Painting',
+      'Theater',
+      'Film',
+      'Design',
+      'Creative Writing'
+    ]
   },
-  {
-    id: 'event4',
-    title: 'Environmental Sustainability Forum',
-    clubId: 'club4',
-    clubName: 'Green Initiative Club',
-    date: '2024-04-30T15:00:00',
-    location: 'Science Center Auditorium',
-    description: 'Panel discussion on climate change and sustainable practices, featuring environmental experts and activists.',
-    imageUrl: 'https://images.unsplash.com/photo-1497435334941-8c899ee9e694',
-    category: 'Forum',
-    capacity: 150,
-    attendees: [],
-    requirements: 'None',
-    price: 'Free'
+  Science: {
+    label: 'Science',
+    subtags: [
+      'Physics',
+      'Chemistry',
+      'Biology',
+      'Environmental Science',
+      'Astronomy',
+      'Mathematics'
+    ]
+  },
+  'Social Impact': {
+    label: 'Social Impact',
+    subtags: [
+      'Community Service',
+      'Environmental',
+      'Social Justice',
+      'Education',
+      'Healthcare',
+      'Mental Health'
+    ]
   }
-];
+};
 
 const EventCard = ({ event, variant }) => {
+  const { currentUser } = useAuth();
+  const [attendeeCount, setAttendeeCount] = useState(event.attendees?.length || 0);
+  const [hasAttended, setHasAttended] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && event.attendees) {
+      setHasAttended(event.attendees.some(a => a.userId === currentUser.uid));
+      setAttendeeCount(event.attendees.length);
+    }
+  }, [currentUser, event.attendees]);
+
+  const handleAttendance = async () => {
+    if (!currentUser) {
+      alert('Please log in to mark attendance');
+      return;
+    }
+
+    try {
+      // Check if event has a valid ID
+      if (!event.id) {
+        console.error('Event ID is missing');
+        alert('Could not update attendance: Invalid event ID');
+        return;
+      }
+
+      const eventRef = doc(db, 'events', event.id);
+      const eventDoc = await getDoc(eventRef);
+      
+      if (!eventDoc.exists()) {
+        alert('Event not found');
+        return;
+      }
+
+      const currentAttendees = eventDoc.data().attendees || [];
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userDoc = await getDoc(userRef);
+      
+      // Check if user is already attending
+      const isAttending = currentAttendees.some(a => a.userId === currentUser.uid);
+
+      if (isAttending) {
+        // Remove attendance
+        const updatedAttendees = currentAttendees.filter(a => a.userId !== currentUser.uid);
+        await updateDoc(eventRef, {
+          attendees: updatedAttendees
+        });
+
+        if (userDoc.exists()) {
+          const userAttendedEvents = userDoc.data().attendedEvents || [];
+          await updateDoc(userRef, {
+            attendedEvents: userAttendedEvents.filter(eventId => eventId !== event.id)
+          });
+        }
+
+        setAttendeeCount(prev => prev - 1);
+        setHasAttended(false);
+      } else {
+        // Add attendance
+        const newAttendee = {
+          userId: currentUser.uid,
+          name: currentUser.displayName || 'Anonymous',
+          timestamp: new Date().toISOString()
+        };
+
+        await updateDoc(eventRef, {
+          attendees: arrayUnion(newAttendee)
+        });
+
+        if (!userDoc.exists()) {
+          // Create user document if it doesn't exist
+          await setDoc(userRef, {
+            attendedEvents: [event.id],
+            displayName: currentUser.displayName,
+            email: currentUser.email,
+            createdAt: new Date().toISOString()
+          });
+        } else {
+          await updateDoc(userRef, {
+            attendedEvents: arrayUnion(event.id)
+          });
+        }
+
+        setAttendeeCount(prev => prev + 1);
+        setHasAttended(true);
+      }
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+      alert('Failed to update attendance. Please try again.');
+    }
+  };
+
   const getCardClass = () => {
     switch (variant) {
       case 'minimal':
@@ -198,6 +290,10 @@ const EventCard = ({ event, variant }) => {
               <span>{event.mode}</span>
             </div>
           )}
+          <div className="detail attendance-count">
+            <i className="detail-icon">👥</i>
+            <span>Attending: {attendeeCount}</span>
+          </div>
         </div>
       </div>
       
@@ -215,6 +311,13 @@ const EventCard = ({ event, variant }) => {
           <span className="btn-icon">🎟️</span>
           {event.ctaText || 'Register Now'}
         </button>
+        <button 
+          className={`attendance-btn ${hasAttended ? 'attended' : ''}`}
+          onClick={handleAttendance}
+        >
+          <span className="btn-icon">{hasAttended ? '✅' : '🎟️'}</span>
+          {hasAttended ? 'Unattend' : 'I am Attending'}
+        </button>
         <Link to={`/events/${event.id}`} className="details-btn">
           <span className="btn-icon">📖</span>
           Learn More
@@ -227,39 +330,31 @@ const EventCard = ({ event, variant }) => {
 function Events() {
   const { currentUser } = useAuth();
   const [events, setEvents] = useState([]);
-  const [registeredEvents, setRegisteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-
-  useEffect(() => {
-    const loadUserEvents = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        const userData = userDoc.data();
-        setRegisteredEvents(userData.registeredEvents || []);
-      } catch (error) {
-        console.error('Error loading user events:', error);
-      }
-    };
-
-    if (currentUser) {
-      loadUserEvents();
-    }
-  }, [currentUser]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedSubcategories, setSelectedSubcategories] = useState([]);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [showRecommended, setShowRecommended] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const eventsSnapshot = await getDocs(collection(db, 'events'));
+        const eventsRef = collection(db, 'events');
+        const eventsQuery = query(eventsRef, orderBy('date', 'asc'));
+        const eventsSnapshot = await getDocs(eventsQuery);
+        
         const eventsList = eventsSnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          date: doc.data().date
         }));
-        console.log('Fetched events:', eventsList);
+
         setEvents(eventsList);
       } catch (error) {
         console.error('Error fetching events:', error);
+        alert('Failed to load events. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -268,149 +363,136 @@ function Events() {
     fetchEvents();
   }, []);
 
-  const handleRegister = async (eventId) => {
-    try {
-      // Update user's registered events
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        registeredEvents: arrayUnion(eventId)
-      });
+  const handleCategorySelect = (category, subcategory = null) => {
+    if (category === 'All') {
+      setSelectedCategory('All');
+      setSelectedSubcategories([]);
+      setActiveDropdown(null);
+      return;
+    }
 
-      // Update event's attendees
-      await updateDoc(doc(db, 'events', eventId), {
-        attendees: arrayUnion({
-          userId: currentUser.uid,
-          name: currentUser.displayName,
-          registrationDate: new Date().toISOString()
-        })
+    if (subcategory) {
+      setSelectedSubcategories(prev => {
+        if (prev.includes(subcategory)) {
+          return prev.filter(sub => sub !== subcategory);
+        }
+        return [...prev, subcategory];
       });
+    }
 
-      setRegisteredEvents([...registeredEvents, eventId]);
-    } catch (error) {
-      console.error('Error registering for event:', error);
+    setSelectedCategory(category);
+    if (!subcategory) {
+      setActiveDropdown(activeDropdown === category ? null : category);
     }
   };
 
-  const isRegistered = (eventId) => {
-    return registeredEvents.includes(eventId);
-  };
+  // Filter events based on search query, category, subcategories, and recommendations
+  const filteredEvents = events.filter(event => {
+    const titleMatch = event.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    const descriptionMatch = event.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const tagMatch = event.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    const searchMatches = titleMatch || descriptionMatch || tagMatch;
 
-  const getTimeLeft = (date) => {
-    const eventDate = new Date(date);
-    const now = new Date();
-    const diff = eventDate - now;
+    let categoryMatches = true;
+    if (selectedCategory !== 'All') {
+      if (selectedSubcategories.length > 0) {
+        categoryMatches = event.tags?.some(tag => selectedSubcategories.includes(tag));
+      } else {
+        categoryMatches = event.tags?.some(tag => CATEGORIES[selectedCategory].subtags.includes(tag));
+      }
+    }
 
-    if (diff < 0) return 'Event ended';
+    let recommendationMatches = true;
+    if (showRecommended && currentUser) {
+      // Add recommendation logic here based on user preferences
+      // For now, we'll just show events that match user's interests
+      const userInterests = currentUser.interests || [];
+      recommendationMatches = event.tags?.some(tag => userInterests.includes(tag));
+    }
 
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-    if (days > 0) return `${days} days left`;
-    return `${hours} hours left`;
-  };
-
-  // Filter events based on selected filter
-  const filteredEvents = filter === 'all' 
-    ? events 
-    : filter === 'recommended' 
-      ? events.filter(event => {
-          // Show events that are:
-          // 1. Free events
-          // 2. Events with popular tags (Technology, Business, Workshop, etc.)
-          // 3. Events with high capacity (indicating they're popular)
-          // 4. Events happening soon
-          const isFree = event.price === 'Free' || !event.price;
-          const hasPopularTags = event.tags && event.tags.some(tag => 
-            ['Technology', 'Business', 'Workshop', 'Networking', 'Career', 'AI', 'Software Development'].includes(tag)
-          );
-          const hasHighCapacity = event.capacity && event.capacity >= 100;
-          
-          const eventDate = event.startDate || event.date;
-          let isHappeningSoon = false;
-          try {
-            const displayDate = eventDate.toDate ? eventDate.toDate() : new Date(eventDate);
-            const now = new Date();
-            const timeDiff = displayDate - now;
-            const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-            isHappeningSoon = daysDiff <= 14 && daysDiff > 0;
-          } catch (error) {
-            // Ignore date parsing errors
-          }
-          
-          return isFree || hasPopularTags || hasHighCapacity || isHappeningSoon;
-        })
-      : filter === 'registered' 
-        ? events.filter(event => isRegistered(event.id))
-        : events.filter(event => !isRegistered(event.id));
-
-  if (loading) {
-    return (
-      <div className="events-loading">
-        <div className="loading-spinner"></div>
-        <h2>🔍 Discovering Amazing Events...</h2>
-        <p>✨ Finding the perfect opportunities just for you</p>
-      </div>
-    );
-  }
-
-  // Use sample events as fallback only if no real events exist
-  const displayEvents = events.length > 0 ? filteredEvents : SAMPLE_EVENTS;
+    return searchMatches && categoryMatches && recommendationMatches;
+  });
 
   return (
     <div className="events-container">
-      <div className="events-header">
-        <h1>🌟 Upcoming Events</h1>
-        <p className="events-subtitle">🎯 Discover amazing opportunities to learn, connect, and grow</p>
-        <div className="filter-buttons">
+      <h1 className="events-title">Discover Your Perfect Event</h1>
+      
+      <div className="search-section">
+        <input
+          type="text"
+          placeholder="Search events by name, description, or tags..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
+      </div>
+
+      <div className="filter-section">
+        <div className="filter-categories">
           <button 
-            className={`filter-button ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => setFilter('all')}
+            className={`category-main all-button ${selectedCategory === 'All' ? 'active' : ''}`}
+            onClick={() => handleCategorySelect('All')}
           >
-            <span className="filter-icon">🌟</span>
-            All Events
+            All
           </button>
-          <button 
-            className={`filter-button ${filter === 'recommended' ? 'active' : ''}`}
-            onClick={() => setFilter('recommended')}
+
+          <button
+            className={`category-main recommendation-button ${showRecommended ? 'active' : ''}`}
+            onClick={() => setShowRecommended(!showRecommended)}
           >
-            <span className="filter-icon">🎯</span>
-            Recommended
+            🎯 Recommended
           </button>
-          <button 
-            className={`filter-button ${filter === 'registered' ? 'active' : ''}`}
-            onClick={() => setFilter('registered')}
-          >
-            <span className="filter-icon">📅</span>
-            My Events
-          </button>
-          <button 
-            className={`filter-button ${filter === 'available' ? 'active' : ''}`}
-            onClick={() => setFilter('available')}
-          >
-            <span className="filter-icon">🎪</span>
-            Available
-          </button>
+
+          {Object.entries(CATEGORIES).map(([category, { label, subtags }]) => (
+            <div key={category} className="category-group">
+              <button 
+                className={`category-main ${activeDropdown === category ? 'active' : ''} ${
+                  selectedSubcategories.some(sub => subtags.includes(sub)) ? 'has-selected' : ''
+                }`}
+                onClick={() => handleCategorySelect(category)}
+              >
+                {label}
+                <FaChevronDown 
+                  className={`dropdown-icon ${activeDropdown === category ? 'active' : ''}`}
+                />
+              </button>
+              
+              {activeDropdown === category && (
+                <div className="dropdown-content active">
+                  <div className="subcategories-grid">
+                    {subtags.map(subcategory => (
+                      <button
+                        key={subcategory}
+                        className={`subcategory ${selectedSubcategories.includes(subcategory) ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCategorySelect(category, subcategory);
+                        }}
+                      >
+                        {subcategory}
+                        {selectedSubcategories.includes(subcategory) && (
+                          <span className="check-icon">✓</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
       <div className="events-grid">
-        {displayEvents.map((event, index) => (
-          <EventCard 
-            key={event.id} 
-            event={event}
-            variant={['minimal', 'gradient', 'image', 'modern'][index % 4]}
-          />
+        {filteredEvents.map(event => (
+          <EventCard key={event.id} event={event} />
         ))}
       </div>
 
-      {events.length === 0 && (
+      {filteredEvents.length === 0 && !loading && (
         <div className="no-events">
-          <div className="no-events-icon">🎪</div>
-          <h3>🔍 No Events Found</h3>
-          <p>🚀 Be the first to create an amazing event for your community!</p>
-          <Link to="/create-event" className="create-event-btn">
-            <span className="btn-icon">✨</span>
-            Create Event
-          </Link>
+          <h3>No events found</h3>
+          <p>Try adjusting your search or filters</p>
         </div>
       )}
     </div>
