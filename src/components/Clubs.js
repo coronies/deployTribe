@@ -5,6 +5,7 @@ import { db } from '../firebase/config';
 import { collection, addDoc, doc, updateDoc, arrayUnion, getDocs } from 'firebase/firestore';
 import { sampleClubs } from '../data/sampleClubs';
 import { FaGithub, FaLinkedin, FaTwitter, FaInstagram, FaDiscord, FaSlack, FaChevronDown, FaTimes } from 'react-icons/fa';
+import { getPersonalizedRecommendations } from '../services/recommendationService';
 import '../styles/Clubs.css';
 
 // Define the categories and their subcategories
@@ -74,6 +75,9 @@ const Clubs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedClubs, setAppliedClubs] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
+  const [recommendedClubs, setRecommendedClubs] = useState([]);
+  const [showRecommendations, setShowRecommendations] = useState(false);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
 
   useEffect(() => {
     const fetchClubs = async () => {
@@ -84,15 +88,25 @@ const Clubs = () => {
           image: `https://source.unsplash.com/800x600/?${club.tags[0].split(':')[1].toLowerCase()}`
         }));
         setClubs(clubs);
+
+        // Get recommendations if user is logged in
+        if (currentUser) {
+          setLoadingRecommendations(true);
+          const recommendations = await getPersonalizedRecommendations(currentUser.uid);
+          setRecommendedClubs(recommendations);
+          setLoadingRecommendations(false);
+        }
+
         setLoading(false);
       } catch (error) {
         console.error('Error fetching clubs:', error);
         setLoading(false);
+        setLoadingRecommendations(false);
       }
     };
 
     fetchClubs();
-  }, []);
+  }, [currentUser]);
 
   const handleApply = async (clubId) => {
     try {
@@ -168,18 +182,22 @@ const Clubs = () => {
     });
   });
 
+  const displayedClubs = showRecommendations ? recommendedClubs : filteredClubs;
+
   return (
     <div className="clubs-container">
       <div className="clubs-header">
         <h1>Discover Your Perfect Club</h1>
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search clubs by name, description, or tags..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
+        <div className="search-filters">
+          <div className="search-bar">
+            <input
+              type="text"
+              placeholder="Search clubs by name, description, or tags..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
         </div>
         <div className="filter-section">
           <div className="filter-categories">
@@ -189,6 +207,15 @@ const Clubs = () => {
             >
               All
             </button>
+            {currentUser && (
+              <button
+                className={`category-main recommendation-toggle ${showRecommendations ? 'active' : ''}`}
+                onClick={() => setShowRecommendations(!showRecommendations)}
+                disabled={loadingRecommendations}
+              >
+                {loadingRecommendations ? 'Loading...' : 'Show Recommendations'}
+              </button>
+            )}
             {Object.entries(CATEGORIES).map(([category, subcategories]) => (
               <div key={category} className="category-group" data-category={category}>
                 <button 
@@ -233,13 +260,18 @@ const Clubs = () => {
       </div>
 
       <div className="clubs-grid">
-        {filteredClubs.map(club => (
+        {displayedClubs.map(club => (
           <div 
             key={club.id} 
             className="club-card"
             data-category={club.tags[0].split(':')[0]}
           >
             <img src={club.image} alt={club.name} className="club-image" />
+            {showRecommendations && (
+              <div className="recommended-badge">
+                {Math.round(club.score * 100)}% Match
+              </div>
+            )}
             <div className="club-header">
               <h2>{club.name}</h2>
             </div>
