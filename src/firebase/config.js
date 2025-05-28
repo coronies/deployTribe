@@ -1,8 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Your web app's Firebase configuration
@@ -24,12 +24,20 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Comment out emulator connections since we're not using them
-// if (process.env.NODE_ENV === 'development') {
-//   connectAuthEmulator(auth, 'http://localhost:9099');
-//   connectFirestoreEmulator(db, 'localhost', 8080);
-//   connectStorageEmulator(storage, 'localhost', 9199);
-// }
+// Connect to emulators in development with better error handling
+if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
+  try {
+    // Connect to emulators with new ports
+    connectAuthEmulator(auth, 'http://localhost:9090', { disableWarnings: true });
+    connectFirestoreEmulator(db, 'localhost', 8090);
+    connectStorageEmulator(storage, 'localhost', 9190);
+    
+    console.log('Connected to Firebase emulators on ports: Auth(9090), Firestore(8090), Storage(9190)');
+  } catch (error) {
+    console.warn('Failed to connect to emulators:', error);
+    console.log('Using production Firebase services');
+  }
+}
 
 // Initialize analytics only in production and if supported
 let analytics = null;

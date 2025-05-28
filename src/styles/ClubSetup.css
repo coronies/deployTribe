@@ -121,6 +121,7 @@ body {
   justify-content: center;
   background: var(--primary-bg);
   color: var(--text-secondary);
+  cursor: pointer;
 }
 
 .upload-placeholder .icon {

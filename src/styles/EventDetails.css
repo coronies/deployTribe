@@ -1,0 +1,279 @@
+.event-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.event-header {
+  margin-bottom: 2rem;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.back-button:hover {
+  color: #333;
+}
+
+.event-header h1 {
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+.organization {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 0;
+}
+
+.event-image {
+  width: 100%;
+  height: 400px;
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.event-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.event-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.event-main {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}
+
+.event-section {
+  margin-bottom: 2rem;
+}
+
+.event-section:last-child {
+  margin-bottom: 0;
+}
+
+.event-section h2 {
+  font-size: 1.5rem;
+  margin: 0 0 1rem;
+  color: #333;
+}
+
+.description {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #444;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.detail-item svg {
+  color: #666;
+  font-size: 1.2rem;
+  margin-top: 0.2rem;
+}
+
+.detail-item h3 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+  color: #666;
+}
+
+.detail-item p {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.mode-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  background: #f0f0f0;
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f0f0f0;
+  border-radius: 20px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.tag svg {
+  font-size: 0.8rem;
+}
+
+.requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.requirements-list li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #eee;
+  color: #444;
+}
+
+.requirements-list li:last-child {
+  border-bottom: none;
+}
+
+.event-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.registration-card,
+.share-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.registration-card h3,
+.share-card h3 {
+  font-size: 1.2rem;
+  margin: 0 0 1rem;
+  color: #333;
+}
+
+.registration-info {
+  margin-bottom: 1.5rem;
+}
+
+.registration-info p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.registration-info strong {
+  color: #333;
+}
+
+.register-button,
+.registered-button,
+.login-button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.register-button {
+  background: #007bff;
+  color: #fff;
+}
+
+.register-button:hover {
+  background: #0056b3;
+}
+
+.registered-button {
+  background: #28a745;
+  color: #fff;
+  cursor: default;
+}
+
+.login-button {
+  background: #6c757d;
+  color: #fff;
+}
+
+.login-button:hover {
+  background: #5a6268;
+}
+
+.share-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.error button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.error button:hover {
+  background: #c82333;
+}
+
+@media (max-width: 768px) {
+  .event-content {
+    grid-template-columns: 1fr;
+  }
+
+  .event-image {
+    height: 300px;
+  }
+
+  .event-header h1 {
+    font-size: 2rem;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+} 

@@ -12,6 +12,7 @@ import Profile from './components/Profile';
 import Landing from './components/Landing';
 import Quiz from './components/Quiz';
 import Events from './components/Events';
+import EventDetails from './components/EventDetails';
 import Clubs from './components/Clubs';
 import About from './components/About';
 import HowItWorks from './components/HowItWorks';
@@ -51,6 +52,7 @@ function App() {
               <Route path="/clubs" element={<SetupRoute><Clubs /></SetupRoute>} />
               <Route path="/clubs/:clubId" element={<SetupRoute><ClubDetails /></SetupRoute>} />
               <Route path="/events" element={<SetupRoute><Events /></SetupRoute>} />
+              <Route path="/events/:eventId" element={<SetupRoute><EventDetails /></SetupRoute>} />
               <Route path="/opportunities" element={<SetupRoute><Opportunities /></SetupRoute>} />
               <Route path="/about" element={<SetupRoute><About /></SetupRoute>} />
               <Route path="/how-it-works" element={<SetupRoute><HowItWorks /></SetupRoute>} />

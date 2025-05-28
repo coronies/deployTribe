@@ -82,7 +82,7 @@ const DaySection = ({ day, selectedSlots, onSlotSelect }) => {
   );
 };
 
-const ClubSetup = ({ isSettings = false }) => {
+const ClubSetup = () => {
   const navigate = useNavigate();
   const { currentUser, updateSetupProgress, completeSetup } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -161,10 +161,6 @@ const ClubSetup = ({ isSettings = false }) => {
           setExistingClub(clubData);
           setClubData(clubData);
           setSelectedTimeSlots(clubData.meetingTimes || {});
-          validateForm();
-        } else if (isSettings) {
-          // If in settings mode but no club data exists, redirect to dashboard
-          navigate('/club-dashboard');
         }
       } catch (error) {
         console.error('Error fetching club:', error);
@@ -175,7 +171,7 @@ const ClubSetup = ({ isSettings = false }) => {
     };
 
     fetchExistingClub();
-  }, [currentUser, isSettings, navigate]);
+  }, [currentUser]);
 
   // Add beforeunload event listener
   useBeforeUnload(
@@ -222,36 +218,31 @@ const ClubSetup = ({ isSettings = false }) => {
 
   const handleInputChange = (field, value) => {
     setClubData(prev => {
-      let newData;
-      if (field.includes('tags.')) {
-        const tagField = field.split('.')[1];
-        newData = {
-          ...prev,
-          tags: {
-            ...prev.tags,
-            [tagField]: value
+      const newData = field.includes('tags.') 
+        ? {
+            ...prev,
+            tags: {
+              ...prev.tags,
+              [field.split('.')[1]]: value
+            }
           }
-        };
-      } else {
-        newData = {
-          ...prev,
-          [field]: value
-        };
-      }
+        : {
+            ...prev,
+            [field]: value
+          };
       
       // Clear validation error when field is updated
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        if (field.includes('tags.')) {
-          delete newErrors[field.split('.')[1]];
-        } else {
+      if (validationErrors[field]) {
+        setValidationErrors(prev => {
+          const newErrors = {...prev};
           delete newErrors[field];
-        }
-        return newErrors;
-      });
+          return newErrors;
+        });
+      }
       
       return newData;
     });
+    
     setIsDirty(true);
   };
 
@@ -426,24 +417,21 @@ const ClubSetup = ({ isSettings = false }) => {
     setError('');
 
     try {
-      const dataToSave = {
-        ...clubData,
-        meetingTimes: selectedTimeSlots,
-        updatedAt: serverTimestamp()
-      };
-
       if (existingClub) {
         // Update existing club
         const clubRef = doc(db, 'clubs', existingClub.id);
-        await updateDoc(clubRef, dataToSave);
+        await updateDoc(clubRef, {
+          ...clubData,
+          updatedAt: serverTimestamp()
+        });
       } else {
         // Create new club
         const clubRef = doc(collection(db, 'clubs'));
         await setDoc(clubRef, {
-          ...dataToSave,
+          ...clubData,
           createdAt: serverTimestamp(),
-          createdBy: currentUser.uid,
-          isSetupComplete: true
+          updatedAt: serverTimestamp(),
+          createdBy: currentUser.uid
         });
         await completeSetup();
       }
@@ -452,7 +440,7 @@ const ClubSetup = ({ isSettings = false }) => {
       setIsDirty(false);
       
       setTimeout(() => {
-        navigate(isSettings ? '/club-dashboard' : '/club-dashboard');
+        navigate('/club-dashboard');
       }, 2000);
     } catch (error) {
       console.error('Error saving club:', error);
@@ -471,10 +459,10 @@ const ClubSetup = ({ isSettings = false }) => {
   const isFormValid = Object.keys(validationErrors).length === 0;
 
   return (
-    <div className={`club-setup-container ${isSettings ? 'editing' : ''}`}>
+    <div className="club-setup-container">
       <div className="setup-header">
-        <h1>{isSettings ? 'Club Settings' : 'Create Your Club'}</h1>
-        {!isSettings && !existingClub && (
+        <h1>{existingClub ? 'Edit Club' : 'Create Your Club'}</h1>
+        {!existingClub && (
           <div className="setup-progress">
             <div className="progress-bar">
               <div 
@@ -491,7 +479,7 @@ const ClubSetup = ({ isSettings = false }) => {
       {error && <div className="error-message">{error}</div>}
       {success && (
         <div className="success-message">
-          {isSettings ? 'Club settings updated successfully!' : 'Club created successfully!'} Redirecting...
+          {existingClub ? 'Club updated successfully!' : 'Club created successfully!'} Redirecting...
         </div>
       )}
 
@@ -658,9 +646,9 @@ const ClubSetup = ({ isSettings = false }) => {
           className="submit-button"
           disabled={loading || !isFormValid || Object.keys(validationErrors).length > 0}
         >
-          {loading ? (isSettings ? 'Saving...' : 'Creating...') : 
+          {loading ? (existingClub ? 'Saving...' : 'Creating...') : 
            !isFormValid ? 'Please Fill Required Fields' : 
-           isSettings ? 'Save Changes' : 'Create Club'}
+           existingClub ? 'Save Changes' : 'Create Club'}
         </button>
       </form>
     </div>

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { updateProfile } from 'firebase/auth';
 import ProfileImageUpload from '../components/ProfileImageUpload';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { FiAlertCircle } from 'react-icons/fi';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
   const [updateError, setUpdateError] = useState(null);
   const [updateSuccess, setUpdateSuccess] = useState(false);
 
@@ -14,12 +14,12 @@ const Profile = () => {
       setUpdateError(null);
       setUpdateSuccess(false);
 
-      if (!user) {
+      if (!currentUser) {
         throw new Error('You must be logged in to update your profile');
       }
 
       // Update user profile with new image URL
-      await updateProfile(user, {
+      await updateProfile(currentUser, {
         photoURL: imageUrl
       });
       
@@ -34,19 +34,19 @@ const Profile = () => {
     <div className="profile-page">
       <div className="profile-header">
         <div className="profile-image-container">
-          {user?.photoURL ? (
+          {currentUser?.photoURL ? (
             <img 
-              src={user.photoURL} 
+              src={currentUser.photoURL} 
               alt="Profile" 
               className="profile-image"
             />
           ) : (
             <div className="profile-image-placeholder">
-              {user?.displayName?.[0] || 'T'}
+              {currentUser?.displayName?.[0] || 'T'}
             </div>
           )}
           <ProfileImageUpload 
-            userId={user?.uid} 
+            userId={currentUser?.uid} 
             onImageUpload={handleImageUpload}
           />
           
