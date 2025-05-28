@@ -14,12 +14,9 @@ const Header = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Handle create menu click outside
       if (createMenuRef.current && !createMenuRef.current.contains(event.target)) {
         setShowCreateMenu(false);
       }
-      
-      // Handle profile menu click outside
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
@@ -33,7 +30,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      setShowDropdown(false); // Close dropdown before logout
+      setShowDropdown(false);
       await logout();
       navigate('/login');
     } catch (error) {
@@ -41,7 +38,15 @@ const Header = () => {
     }
   };
 
-  // Helper function to safely get user initial
+  const handleCreateClick = (e) => {
+    if (!currentUser) {
+      e.preventDefault();
+      navigate('/login', { state: { from: window.location.pathname, message: 'Please log in to create content' } });
+    } else {
+      setShowCreateMenu(!showCreateMenu);
+    }
+  };
+
   const getUserInitial = () => {
     if (!currentUser) return '?';
     if (currentUser.displayName) return currentUser.displayName[0].toUpperCase();
@@ -60,43 +65,33 @@ const Header = () => {
           <Link to="/clubs">Explore Clubs</Link>
           <Link to="/events">Events</Link>
           <Link to="/opportunities">Opportunities</Link>
-          {currentUser && (
-            <div 
-              className="create-menu-wrapper"
-              ref={createMenuRef}
-            >
-              <button 
-                className="create-button"
-                onClick={() => setShowCreateMenu(!showCreateMenu)}
-                aria-expanded={showCreateMenu}
-              >
-                <FiPlus /> Create
-              </button>
-              {showCreateMenu && (
-                <div className="create-dropdown">
-                  <Link to="/manage/opportunities/create" onClick={() => setShowCreateMenu(false)}>
-                    <span className="icon">✨</span>
-                    Create Opportunity
-                  </Link>
-                  <Link to="/manage/events/create" onClick={() => setShowCreateMenu(false)}>
-                    <span className="icon">🎉</span>
-                    Create Event
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
           <Link to="/quiz">Take Quiz</Link>
-          {currentUser ? (
-            <>
-              <Link to="/student-dashboard">Dashboard</Link>
-            </>
-          ) : (
-            <>
-              <Link to="/about">About Us</Link>
-              <Link to="/how-it-works">How It Works</Link>
-            </>
-          )}
+          
+          <div className="create-menu-wrapper" ref={createMenuRef}>
+            <button 
+              className="create-button"
+              onClick={handleCreateClick}
+              aria-expanded={showCreateMenu}
+            >
+              <FiPlus /> Create
+            </button>
+            {showCreateMenu && currentUser && (
+              <div className="create-dropdown">
+                <Link to="/manage/opportunities/create" onClick={() => setShowCreateMenu(false)}>
+                  <span className="icon">✨</span>
+                  Create Opportunity
+                </Link>
+                <Link to="/manage/events/create" onClick={() => setShowCreateMenu(false)}>
+                  <span className="icon">🎉</span>
+                  Create Event
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <Link to="/about">About Us</Link>
+          <Link to="/how-it-works">How It Works</Link>
+          {currentUser && <Link to="/student-dashboard">Dashboard</Link>}
         </nav>
 
         <div className="user-section">

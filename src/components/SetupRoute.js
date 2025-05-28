@@ -3,7 +3,41 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingScreen from './LoadingScreen';
 
-const ALLOWED_PATHS = ['/login', '/register'];
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = [
+  '/login',
+  '/register',
+  '/',
+  '/clubs',
+  '/events',
+  '/opportunities',
+  '/about',
+  '/how-it-works',
+  '/quiz'
+];
+
+// Routes that require authentication
+const PROTECTED_ROUTES = [
+  '/student-dashboard',
+  '/club-dashboard',
+  '/profile',
+  '/my-clubs',
+  '/my-events',
+  '/club-setup',
+  '/club-settings',
+  '/settings',
+  '/manage'
+];
+
+// Actions that require authentication (these will trigger a login prompt)
+const PROTECTED_ACTIONS = [
+  'create',
+  'edit',
+  'delete',
+  'join',
+  'register',
+  'apply'
+];
 
 const SetupRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
@@ -12,45 +46,42 @@ const SetupRoute = ({ children }) => {
 
   useEffect(() => {
     const checkSetup = () => {
-      // If not loading and no user, redirect to login
-      if (!loading && !currentUser) {
-        navigate('/login');
-        return;
-      }
+      // If loading, wait
+      if (loading) return;
 
-      // If user is not a club account, allow normal navigation
-      if (!loading && currentUser?.userType !== 'club') {
-        return;
-      }
+      // Check if current path is protected
+      const isProtectedRoute = PROTECTED_ROUTES.some(route => 
+        location.pathname.startsWith(route)
+      );
 
-      // For club accounts:
-      if (!loading && currentUser?.userType === 'club') {
-        // If no club data exists yet, redirect to setup
-        if (!currentUser.clubData) {
-          if (location.pathname !== '/club-setup') {
-            navigate('/club-setup');
+      // Check if current action is protected
+      const hasProtectedAction = PROTECTED_ACTIONS.some(action =>
+        location.pathname.includes(action)
+      );
+
+      // If it's a protected route/action and user is not logged in, redirect to login
+      if ((isProtectedRoute || hasProtectedAction) && !currentUser) {
+        navigate('/login', { 
+          state: { 
+            from: location.pathname,
+            message: 'Please log in to access this feature'
           }
+        });
+        return;
+      }
+
+      // Handle club account specific logic
+      if (currentUser?.userType === 'club') {
+        // If no club data exists yet, redirect to setup
+        if (!currentUser.clubData && location.pathname !== '/club-setup') {
+          navigate('/club-setup');
           return;
         }
 
         // If setup is complete and trying to access /club-setup, redirect to dashboard
-        if (currentUser.clubData.isSetupComplete && location.pathname === '/club-setup') {
+        if (currentUser.clubData?.isSetupComplete && location.pathname === '/club-setup') {
           navigate('/club-dashboard');
           return;
-        }
-
-        // If setup is not complete:
-        if (!currentUser.clubData.isSetupComplete) {
-          // Allow access only to login/register pages
-          if (ALLOWED_PATHS.includes(location.pathname)) {
-            return;
-          }
-          
-          // If not on setup page, redirect to setup
-          if (location.pathname !== '/club-setup') {
-            navigate('/club-setup');
-            return;
-          }
         }
       }
     };
