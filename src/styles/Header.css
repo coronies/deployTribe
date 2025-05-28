@@ -178,7 +178,7 @@
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(100% + 8px);
   right: 0;
   background: white;
   border-radius: 8px;
@@ -188,16 +188,28 @@
   z-index: 1100;
   opacity: 0;
   visibility: hidden;
-  transform-origin: top right;
   transform: translateY(-10px);
   transition: all 0.2s ease;
+  transform-origin: top right;
+}
+
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 16px;
+  width: 12px;
+  height: 12px;
+  background: white;
+  transform: rotate(45deg);
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .dropdown-menu.active {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
-  animation: dropdownFadeIn 0.2s ease;
 }
 
 .dropdown-menu a,
