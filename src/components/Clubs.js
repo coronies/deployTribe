@@ -145,8 +145,7 @@ const Clubs = () => {
         return newSelection;
       });
     } else {
-      setSelectedCategory(category);
-      setActiveModal(category);
+      setActiveModal(activeModal === category ? null : category);
     }
   };
 
@@ -184,61 +183,54 @@ const Clubs = () => {
         </div>
         <div className="filter-section">
           <div className="filter-categories">
-            <div className="category-group">
-              <button 
-                className={`category-main all-button ${selectedCategory === 'All' && selectedSubcategories.length === 0 ? 'active' : ''}`}
-                onClick={() => handleCategorySelect('All')}
-              >
-                All
-              </button>
-            </div>
+            <button 
+              className={`category-main all-button ${selectedCategory === 'All' && selectedSubcategories.length === 0 ? 'active' : ''}`}
+              onClick={() => handleCategorySelect('All')}
+            >
+              All
+            </button>
             {Object.entries(CATEGORIES).map(([category, subcategories]) => (
               <div key={category} className="category-group" data-category={category}>
                 <button 
-                  className="category-main" 
+                  className={`category-main ${activeModal === category ? 'active' : ''}`}
                   data-category={category}
                   onClick={() => handleCategorySelect(category)}
                 >
                   {category}
-                  <FaChevronDown style={{ fontSize: '0.8em' }} />
+                  <FaChevronDown 
+                    style={{ 
+                      fontSize: '0.8em',
+                      transform: activeModal === category ? 'rotate(180deg)' : 'none',
+                      transition: 'transform 0.3s ease'
+                    }} 
+                  />
                 </button>
+                {activeModal === category && (
+                  <div className="dropdown-content active">
+                    <div className="subcategories-grid">
+                      {subcategories.map(subcategory => (
+                        <button
+                          key={subcategory}
+                          className={`subcategory ${selectedSubcategories.includes(subcategory) ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCategorySelect(category, subcategory);
+                          }}
+                        >
+                          {subcategory}
+                          {selectedSubcategories.includes(subcategory) && (
+                            <span className="check-icon">✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       </div>
-
-      {/* Modal Overlays */}
-      {Object.entries(CATEGORIES).map(([category, subcategories]) => (
-        <div key={category}>
-          <div 
-            className={`dropdown-overlay ${activeModal === category ? 'active' : ''}`}
-            onClick={closeModal}
-          />
-          <div className={`dropdown-content ${activeModal === category ? 'active' : ''}`}>
-            <div className="dropdown-header">
-              <span className="dropdown-title">{category} Categories</span>
-              <button className="close-dropdown" onClick={closeModal}>
-                <FaTimes />
-              </button>
-            </div>
-            <div className="subcategories-grid">
-              {subcategories.map(subcategory => (
-                <button
-                  key={subcategory}
-                  className={`subcategory ${selectedSubcategories.includes(subcategory) ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCategorySelect(category, subcategory);
-                  }}
-                >
-                  {subcategory}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ))}
 
       <div className="clubs-grid">
         {filteredClubs.map(club => (
