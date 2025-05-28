@@ -24,11 +24,19 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Connect to emulators in development
-if (process.env.NODE_ENV === 'development') {
-  connectAuthEmulator(auth, 'http://localhost:9099');
-  connectFirestoreEmulator(db, 'localhost', 8080);
-  connectStorageEmulator(storage, 'localhost', 9199);
+// Connect to emulators in development with better error handling
+if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
+  try {
+    // Connect to emulators with new ports
+    connectAuthEmulator(auth, 'http://localhost:9090', { disableWarnings: true });
+    connectFirestoreEmulator(db, 'localhost', 8090);
+    connectStorageEmulator(storage, 'localhost', 9190);
+    
+    console.log('Connected to Firebase emulators on ports: Auth(9090), Firestore(8090), Storage(9190)');
+  } catch (error) {
+    console.warn('Failed to connect to emulators:', error);
+    console.log('Using production Firebase services');
+  }
 }
 
 // Initialize analytics only in production and if supported

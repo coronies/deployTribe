@@ -40,67 +40,75 @@ function Register() {
   };
 
   const validateEmail = (email) => {
-    // Check if email ends with .edu
-    if (!email.toLowerCase().endsWith('.edu')) {
+    // Check if email ends with .edu or is a valid email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       return false;
     }
-    // Additional university-specific email validation could be added here
-    return true;
+    
+    // For development/testing, allow any valid email
+    if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
+      return true;
+    }
+    
+    // In production, require .edu emails
+    return email.toLowerCase().endsWith('.edu');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    // Validate university selection
-    if (!formData.university) {
-      setError('Please select your university');
-      return;
-    }
-
-    // Validate .edu email
-    if (!validateEmail(formData.email)) {
-      setError('Please use your university email address (.edu)');
-      return;
-    }
-
-    // Password validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    // User type specific validation
-    if (userType === 'student' && !formData.name) {
-      setError('Please enter your name');
-      return;
-    }
-
-    if (userType === 'club') {
-      if (!formData.clubName) {
-        setError('Please enter club name');
-        return;
-      }
-      if (!formData.description) {
-        setError('Please enter club description');
-        return;
-      }
-    }
+    setLoading(true);
 
     try {
-      setLoading(true);
-      await signup(formData.email, formData.password, userType, {
+      // Validate university selection
+      if (!formData.university) {
+        throw new Error('Please select your university');
+      }
+
+      // Validate email
+      if (!validateEmail(formData.email)) {
+        const errorMsg = process.env.NODE_ENV === 'development' 
+          ? 'Please enter a valid email address'
+          : 'Please use your university email address (.edu)';
+        throw new Error(errorMsg);
+      }
+
+      // Password validation
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+
+      if (formData.password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
+      }
+
+      // User type specific validation
+      if (userType === 'student' && !formData.name.trim()) {
+        throw new Error('Please enter your name');
+      }
+
+      if (userType === 'club') {
+        if (!formData.clubName.trim()) {
+          throw new Error('Please enter club name');
+        }
+        if (!formData.description.trim()) {
+          throw new Error('Please enter club description');
+        }
+      }
+
+      console.log('Starting registration process...', { userType, email: formData.email });
+
+      // Attempt signup
+      const result = await signup(formData.email, formData.password, userType, {
         name: formData.name,
         clubName: formData.clubName,
         description: formData.description,
         university: formData.university,
         universityName: UNIVERSITIES.find(u => u.id === formData.university)?.name
       });
+
+      console.log('Registration successful:', result);
 
       // Navigate based on user type
       if (userType === 'student') {
@@ -110,7 +118,24 @@ function Register() {
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setError('Failed to create an account: ' + error.message);
+      
+      // Handle specific Firebase errors
+      let errorMessage = error.message;
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'An account with this email already exists. Please try logging in instead.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak. Please choose a stronger password.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.message.includes('Failed to create an account')) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = `Registration failed: ${error.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

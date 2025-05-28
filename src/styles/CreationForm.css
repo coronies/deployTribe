@@ -1,5 +1,33 @@
+:root {
+  /* Base Colors from Quiz */
+  --primary-blue: #4361ee;
+  --primary-red: #ff6b6b;
+  --primary-purple: #9966FF;
+  --primary-green: #20C997;
+  --primary-yellow: #FFB84D;
+  --background-light: #F8FAFC;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --border-light: #E2E8F0;
+  
+  /* Neomorphic Shadows */
+  --neu-shadow: 
+    12px 12px 24px rgba(163, 177, 198, 0.2),
+    -12px -12px 24px rgba(255, 255, 255, 0.6);
+  --neu-shadow-inset: 
+    inset 3px 3px 7px rgba(136, 165, 191, 0.48),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.8);
+  --neu-shadow-pressed: 
+    inset 6px 6px 10px rgba(163, 177, 198, 0.4),
+    inset -6px -6px 10px rgba(255, 255, 255, 0.8);
+}
+
+body {
+  background-color: var(--background-light);
+}
+
 .creation-page {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -8,335 +36,422 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: var(--neu-shadow);
 }
 
 .creation-header-content {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .creation-header-icon {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ebf4ff;
-  color: #4361ee;
-  border-radius: 12px;
-  font-size: 1.5rem;
+  font-size: 2rem;
+  color: var(--primary-blue);
+  padding: 1rem;
+  background: white;
+  border-radius: 50%;
+  box-shadow: var(--neu-shadow);
 }
 
 .creation-header-text h1 {
-  color: #1a202c;
   font-size: 2rem;
+  color: var(--text-primary);
   margin: 0;
-  margin-bottom: 0.5rem;
 }
 
 .creation-header-text p {
-  color: #718096;
-  font-size: 1rem;
-  margin: 0;
+  color: var(--text-secondary);
+  margin: 0.5rem 0 0;
 }
 
 .back-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 1.5rem;
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  color: #4a5568;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border: none;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: var(--neu-shadow);
+  transition: all 0.3s ease;
 }
 
 .back-button:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
-  color: #2d3748;
+  transform: translateY(-2px);
 }
 
 .creation-form {
   display: grid;
-  grid-template-columns: 3fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 2rem;
 }
 
 .form-main {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.form-sidebar {
-  position: sticky;
-  top: 2rem;
-  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .form-section {
+  background: white;
+  border-radius: 20px;
   padding: 2rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.form-section:last-child {
-  border-bottom: none;
+  box-shadow: var(--neu-shadow);
+  margin-bottom: 2rem;
 }
 
 .form-section-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .section-icon {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f7fafc;
-  color: #4361ee;
-  border-radius: 8px;
-  font-size: 1rem;
+  background: white;
+  border-radius: 12px;
+  color: var(--primary-blue);
+  box-shadow: var(--neu-shadow);
 }
 
-.form-section h2 {
-  color: #2d3748;
-  font-size: 1.25rem;
+.form-section-header h2 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
   margin: 0;
 }
 
-.form-section p {
-  color: #718096;
-  font-size: 0.875rem;
-  margin: 0.5rem 0 0 0;
+.form-section-header p {
+  color: var(--text-secondary);
+  margin: 0.25rem 0 0;
 }
 
 .form-group {
   margin-bottom: 1.5rem;
-}
-
-.form-group:last-child {
-  margin-bottom: 0;
+  position: relative;
 }
 
 .form-group label {
   display: block;
-  color: #4a5568;
-  font-size: 0.875rem;
   font-weight: 500;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
-.form-group input,
+.form-group label span.required {
+  color: var(--primary-red);
+  margin-left: 0.25rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="url"],
+.form-group input[type="number"],
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-  color: #2d3748;
-  transition: all 0.2s ease;
-}
-
-.form-group input:hover,
-.form-group select:hover,
-.form-group textarea:hover {
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
   background: white;
-  border-color: #cbd5e0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  box-shadow: var(--neu-shadow-inset);
+  transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  background: white;
-  border-color: #4361ee;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
-}
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 120px;
+  box-shadow: var(--neu-shadow-pressed);
 }
 
 .help-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
   margin-top: 0.5rem;
-  color: #718096;
-  font-size: 0.75rem;
 }
 
+/* Tag Input Styles */
 .tag-input {
+  padding: 0.5rem;
+  border-radius: 12px;
+  background: white;
+  box-shadow: var(--neu-shadow-inset);
+  min-height: 48px;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
+}
+
+.tag-input input {
+  border: none;
+  outline: none;
   padding: 0.5rem;
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  min-height: 42px;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: transparent;
+  flex: 1;
+  min-width: 120px;
 }
 
 .tag {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  background: #ebf4ff;
-  color: #4361ee;
-  border-radius: 16px;
+  padding: 0.5rem 1rem;
+  background: var(--primary-blue);
+  color: white;
+  border-radius: 20px;
   font-size: 0.875rem;
 }
 
 .tag button {
   background: none;
   border: none;
-  color: #4361ee;
+  color: white;
   cursor: pointer;
   padding: 0;
-  font-size: 1rem;
+  font-size: 1.25rem;
   line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
-.tag-input input {
-  flex: 1;
-  min-width: 120px;
-  border: none;
-  background: transparent;
-  padding: 0.25rem;
-  font-size: 0.875rem;
-  color: #2d3748;
+/* Category Cards */
+.category-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--neu-shadow);
 }
 
-.tag-input input:focus {
-  outline: none;
+.category-header {
+  margin-bottom: 1rem;
+}
+
+.category-header h3 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Technology Category */
+.category-card[data-category="Technology"] {
+  border-top: 4px solid var(--primary-blue);
+}
+
+.category-card[data-category="Technology"] .subtag.selected {
+  background: rgba(67, 97, 238, 0.1);
+  color: var(--primary-blue);
+  border-color: var(--primary-blue);
+}
+
+/* Business Category */
+.category-card[data-category="Business"] {
+  border-top: 4px solid var(--primary-red);
+}
+
+.category-card[data-category="Business"] .subtag.selected {
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--primary-red);
+  border-color: var(--primary-red);
+}
+
+/* Arts & Culture Category */
+.category-card[data-category="Arts & Culture"] {
+  border-top: 4px solid var(--primary-purple);
+}
+
+.category-card[data-category="Arts & Culture"] .subtag.selected {
+  background: rgba(153, 102, 255, 0.1);
+  color: var(--primary-purple);
+  border-color: var(--primary-purple);
+}
+
+/* Science Category */
+.category-card[data-category="Science"] {
+  border-top: 4px solid var(--primary-green);
+}
+
+.category-card[data-category="Science"] .subtag.selected {
+  background: rgba(32, 201, 151, 0.1);
+  color: var(--primary-green);
+  border-color: var(--primary-green);
+}
+
+/* Social Impact Category */
+.category-card[data-category="Social Impact"] {
+  border-top: 4px solid var(--primary-yellow);
+}
+
+.category-card[data-category="Social Impact"] .subtag.selected {
+  background: rgba(255, 184, 77, 0.1);
+  color: var(--primary-yellow);
+  border-color: var(--primary-yellow);
+}
+
+/* File Input Styling */
+.file-input {
+  display: none;
+}
+
+.file-input-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--neu-shadow);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-input-label:hover {
+  transform: translateY(-2px);
+}
+
+.file-input-icon {
+  font-size: 1.5rem;
+  color: var(--primary-blue);
+}
+
+.image-preview {
+  margin-top: 1rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--neu-shadow);
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Form Sidebar */
+.form-sidebar {
+  position: sticky;
+  top: 2rem;
+  align-self: start;
 }
 
 .form-sidebar-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .sidebar-section {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.sidebar-section:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: var(--neu-shadow);
 }
 
 .sidebar-section h3 {
-  color: #2d3748;
-  font-size: 1rem;
-  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
 }
 
 .preview-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  overflow: hidden;
+  background: var(--background-light);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: var(--neu-shadow-inset);
 }
 
 .preview-header {
-  padding: 1rem;
-  background: #f7fafc;
-  border-bottom: 1px solid #e2e8f0;
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  font-weight: 500;
 }
 
 .preview-body {
-  padding: 1rem;
-}
-
-.preview-placeholder {
-  width: 100%;
-  height: 120px;
-  background: #f7fafc;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #a0aec0;
-  font-size: 0.875rem;
+  color: var(--text-secondary);
 }
 
 .form-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .submit-button,
 .save-draft-button {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .submit-button {
-  background: #4361ee;
+  background: var(--primary-blue);
   color: white;
-  border: none;
+  box-shadow: var(--neu-shadow);
 }
 
 .submit-button:hover {
-  background: #3651d4;
-}
-
-.submit-button:disabled {
-  background: #a0aec0;
-  cursor: not-allowed;
+  transform: translateY(-2px);
 }
 
 .save-draft-button {
   background: white;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
+  color: var(--text-secondary);
+  box-shadow: var(--neu-shadow);
 }
 
 .save-draft-button:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
+  transform: translateY(-2px);
 }
 
+/* Error Message */
 .error-message {
-  background: #fff5f5;
-  border: 1px solid #fc8181;
-  color: #c53030;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 12px;
+  color: var(--primary-red);
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .creation-form {
+    grid-template-columns: 1fr;
+  }
+
+  .form-sidebar {
+    position: static;
+  }
 }
 
 @media (max-width: 768px) {
@@ -346,19 +461,725 @@
 
   .creation-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    text-align: center;
+    padding: 1.5rem;
   }
 
-  .creation-form {
-    grid-template-columns: 1fr;
+  .creation-header-content {
+    flex-direction: column;
   }
 
   .form-section {
     padding: 1.5rem;
   }
+}
 
-  .form-sidebar {
-    position: static;
+.preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.preview-tag {
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  color: white;
+  background: var(--text-secondary);
+}
+
+.preview-tag-technology {
+  background: var(--primary-blue);
+}
+
+.preview-tag-business {
+  background: var(--primary-red);
+}
+
+.preview-tag-arts-culture {
+  background: var(--primary-purple);
+}
+
+.preview-tag-science {
+  background: var(--primary-green);
+}
+
+.preview-tag-social-impact {
+  background: var(--primary-yellow);
+  color: var(--text-primary); /* Dark text for light background */
+}
+
+/* Time Picker Styling */
+.react-time-picker__wrapper {
+  border: none !important;
+  background: white;
+  box-shadow: var(--neu-shadow-inset);
+  border-radius: 12px !important;
+  padding: 1rem 1rem 1rem 3rem !important;
+}
+
+.react-time-picker__inputGroup {
+  padding: 0 !important;
+  font-size: 1rem !important;
+  min-width: auto !important;
+}
+
+.react-time-picker__inputGroup__input {
+  font-size: 1rem !important;
+  color: var(--text-primary) !important;
+  font-family: inherit !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 0.25rem !important;
+  width: 2.5rem !important;
+  text-align: center;
+}
+
+.react-time-picker__inputGroup__input:focus {
+  background: rgba(67, 97, 238, 0.1) !important;
+  border-radius: 4px;
+  outline: none;
+}
+
+.react-time-picker__inputGroup__divider {
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 0 0.25rem;
+}
+
+.react-time-picker__clock-button,
+.react-time-picker__clear-button {
+  display: none !important;
+}
+
+/* Date and Time Layout */
+.datetime-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.datetime-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.datetime-field label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0;
+}
+
+.datetime-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Date Input Styling */
+.date-input {
+  position: relative;
+  width: 100%;
+}
+
+.date-input input {
+  width: 100%;
+  height: 48px;
+  padding: 0 1rem 0 3rem;
+  border: none;
+  border-radius: 12px;
+  background: white;
+  color: var(--text-primary);
+  font-size: 1rem;
+  box-shadow: var(--neu-shadow-inset);
+  transition: all 0.3s ease;
+}
+
+.date-input input:hover,
+.date-input input:focus {
+  box-shadow: var(--neu-shadow-pressed);
+  outline: none;
+}
+
+/* Time Input Styling */
+.time-input {
+  position: relative;
+  width: 100%;
+}
+
+.time-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  margin-left: 0.25rem;
+}
+
+.time-input-field {
+  position: relative;
+  width: 100%;
+}
+
+.time-input .MuiInputBase-root {
+  width: 100% !important;
+  height: 48px !important;
+  padding: 0 1rem 0 3rem !important;
+  border: none !important;
+  border-radius: 12px !important;
+  background: white !important;
+  color: var(--text-primary) !important;
+  font-size: 1rem !important;
+  font-family: inherit !important;
+  box-shadow: var(--neu-shadow-inset) !important;
+  transition: all 0.3s ease !important;
+}
+
+.time-input .MuiInputBase-root:hover,
+.time-input .MuiInputBase-root:focus-within {
+  box-shadow: var(--neu-shadow-pressed) !important;
+}
+
+.time-input .MuiOutlinedInput-notchedOutline {
+  border: none !important;
+}
+
+/* Icon Styling */
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-blue);
+  font-size: 1.25rem;
+  z-index: 1;
+}
+
+/* Registration Deadline */
+.registration-deadline {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.registration-deadline .datetime-field {
+  max-width: 400px;
+}
+
+/* Required Field Indicator */
+.required {
+  color: var(--primary-red);
+  margin-left: 0.25rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .datetime-wrapper {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
+  
+  .datetime-field {
+    gap: 1rem;
+  }
+}
+
+/* Tag Selection Improvements */
+.categories-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.category-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--neu-shadow);
+  border-top: 4px solid transparent;
+  height: fit-content;
+}
+
+.tag-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.tag-selector .subtag {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  text-align: center;
+  background: var(--background-light);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.tag-selector .subtag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tag-selector .subtag.selected {
+  color: white;
+  border: none;
+  font-weight: 500;
+}
+
+/* Category Colors */
+.category-card[data-category="technology"] {
+  border-color: var(--primary-blue);
+}
+
+.category-card[data-category="technology"] .subtag.selected {
+  background: var(--primary-blue);
+}
+
+.category-card[data-category="business"] {
+  border-color: var(--primary-red);
+}
+
+.category-card[data-category="business"] .subtag.selected {
+  background: var(--primary-red);
+}
+
+.category-card[data-category="arts-culture"] {
+  border-color: var(--primary-purple);
+}
+
+.category-card[data-category="arts-culture"] .subtag.selected {
+  background: var(--primary-purple);
+}
+
+.category-card[data-category="science"] {
+  border-color: var(--primary-green);
+}
+
+.category-card[data-category="science"] .subtag.selected {
+  background: var(--primary-green);
+}
+
+.category-card[data-category="social-impact"] {
+  border-color: var(--primary-yellow);
+}
+
+.category-card[data-category="social-impact"] .subtag.selected {
+  background: var(--primary-yellow);
+  color: var(--text-primary);
+}
+
+/* MUI TimePicker Custom Styling */
+.time-input .MuiTextField-root {
+  width: 100% !important;
+}
+
+.time-input .MuiOutlinedInput-root {
+  border: none !important;
+  border-radius: 12px !important;
+  background: white !important;
+  box-shadow: var(--neu-shadow-inset) !important;
+  padding: 1rem 1rem 1rem 3rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.time-input .MuiOutlinedInput-root:hover {
+  box-shadow: var(--neu-shadow-pressed) !important;
+}
+
+.time-input .MuiOutlinedInput-root.Mui-focused {
+  box-shadow: var(--neu-shadow-pressed) !important;
+}
+
+.time-input .MuiOutlinedInput-notchedOutline {
+  border: none !important;
+}
+
+.time-input .MuiInputBase-input {
+  padding: 0 !important;
+  font-size: 1rem !important;
+  font-family: inherit !important;
+  color: var(--text-primary) !important;
+}
+
+/* MUI TimePicker Dropdown/Popover */
+.MuiPaper-root.MuiPickersPopper-paper {
+  border-radius: 16px !important;
+  box-shadow: var(--neu-shadow) !important;
+  border: none !important;
+  overflow: hidden !important;
+  margin-top: 0.5rem !important;
+}
+
+/* MUI Digital Clock Styling */
+.MuiDigitalClock-root {
+  background: white !important;
+  max-height: 300px !important;
+}
+
+.MuiDigitalClock-item {
+  padding: 0.75rem 1rem !important;
+  border-radius: 8px !important;
+  margin: 0.25rem !important;
+  transition: all 0.2s ease !important;
+  font-size: 1rem !important;
+  color: var(--text-primary) !important;
+}
+
+.MuiDigitalClock-item:hover {
+  background: rgba(67, 97, 238, 0.1) !important;
+  color: var(--primary-blue) !important;
+  transform: scale(1.02);
+}
+
+.MuiDigitalClock-item.Mui-selected {
+  background: var(--primary-blue) !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* MUI Toolbar (if using TimeClock view) */
+.MuiPickersToolbar-root {
+  background: var(--primary-blue) !important;
+  padding: 1.5rem !important;
+}
+
+.MuiPickersToolbar-content .MuiTypography-root {
+  color: white !important;
+}
+
+/* MUI Clock Face Styling */
+.MuiClockPicker-root {
+  background: white !important;
+}
+
+.MuiClock-root {
+  background: white !important;
+}
+
+.MuiClock-clock {
+  background: white !important;
+  border: 1px solid var(--border-light) !important;
+}
+
+.MuiClockPointer-root {
+  background: var(--primary-blue) !important;
+}
+
+.MuiClockPointer-thumb {
+  background: var(--primary-blue) !important;
+  border-color: var(--primary-blue) !important;
+}
+
+.MuiClockNumber-root {
+  color: var(--text-primary) !important;
+  transition: all 0.2s ease !important;
+}
+
+.MuiClockNumber-root:hover {
+  background: rgba(67, 97, 238, 0.1) !important;
+  color: var(--primary-blue) !important;
+}
+
+.MuiClockNumber-root.Mui-selected {
+  background: var(--primary-blue) !important;
+  color: white !important;
+}
+
+/* MUI Action Bar */
+.MuiDialogActions-root {
+  padding: 1rem 1.5rem !important;
+  background: white !important;
+}
+
+.MuiButton-root {
+  border-radius: 8px !important;
+  padding: 0.75rem 1.5rem !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.MuiButton-textPrimary {
+  color: var(--primary-blue) !important;
+}
+
+.MuiButton-textPrimary:hover {
+  background: rgba(67, 97, 238, 0.1) !important;
+}
+
+/* React DatePicker Custom Styling */
+.react-datepicker {
+  font-family: inherit !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: var(--neu-shadow) !important;
+  overflow: hidden !important;
+}
+
+.react-datepicker__header {
+  background: var(--primary-blue) !important;
+  border-bottom: none !important;
+  padding: 1rem !important;
+}
+
+.react-datepicker__current-month {
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.react-datepicker__navigation {
+  top: 1rem !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: white !important;
+}
+
+.react-datepicker__day-names {
+  margin-top: 0.5rem !important;
+}
+
+.react-datepicker__day-name {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 500 !important;
+  width: 2.5rem !important;
+  margin: 0.2rem !important;
+}
+
+.react-datepicker__month {
+  margin: 0 !important;
+  padding: 1rem !important;
+  background: white !important;
+}
+
+.react-datepicker__day {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  line-height: 2.5rem !important;
+  margin: 0.2rem !important;
+  border-radius: 50% !important;
+  color: var(--text-primary) !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-datepicker__day:hover {
+  background: rgba(67, 97, 238, 0.1) !important;
+  color: var(--primary-blue) !important;
+  transform: scale(1.1) !important;
+}
+
+.react-datepicker__day--selected {
+  background: var(--primary-blue) !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background: rgba(67, 97, 238, 0.2) !important;
+  color: var(--primary-blue) !important;
+}
+
+.react-datepicker__day--outside-month {
+  color: var(--text-secondary) !important;
+  opacity: 0.5 !important;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
+}
+
+/* Calendar Icon */
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-blue);
+  pointer-events: none;
+  z-index: 1;
+  font-size: 1.125rem;
+}
+
+/* Field Labels */
+.field-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+/* Date and Time Inputs */
+.date-picker-input,
+.time-picker-input {
+  width: 100% !important;
+  height: 48px !important;
+  padding: 0 1rem 0 3rem !important;
+  border: none !important;
+  border-radius: 12px !important;
+  background: white !important;
+  color: var(--text-primary) !important;
+  font-size: 1rem !important;
+  font-family: inherit !important;
+  box-shadow: var(--neu-shadow-inset) !important;
+  transition: all 0.3s ease !important;
+}
+
+.date-picker-input:hover,
+.time-picker-input:hover {
+  box-shadow: var(--neu-shadow-pressed) !important;
+}
+
+.date-picker-input:focus,
+.time-picker-input:focus {
+  box-shadow: var(--neu-shadow-pressed) !important;
+  outline: none !important;
+}
+
+/* Tag Selection */
+.categories-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.category-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--neu-shadow);
+  border-top: 4px solid transparent;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.category-header h3 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.tag-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.75rem;
+  background: var(--background-light);
+  border-radius: 12px;
+}
+
+.tag-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.tag-selector .subtag {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: var(--background-light);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.tag-selector .subtag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tag-selector .subtag.selected {
+  color: white;
+  border: none;
+}
+
+/* Category-specific colors */
+.category-card[data-category="technology"] {
+  border-color: var(--primary-blue);
+}
+
+.category-card[data-category="technology"] .subtag.selected {
+  background: var(--primary-blue);
+}
+
+.category-card[data-category="business"] {
+  border-color: var(--primary-red);
+}
+
+.category-card[data-category="business"] .subtag.selected {
+  background: var(--primary-red);
+}
+
+.category-card[data-category="arts-culture"] {
+  border-color: var(--primary-purple);
+}
+
+.category-card[data-category="arts-culture"] .subtag.selected {
+  background: var(--primary-purple);
+}
+
+.category-card[data-category="science"] {
+  border-color: var(--primary-green);
+}
+
+.category-card[data-category="science"] .subtag.selected {
+  background: var(--primary-green);
+}
+
+.category-card[data-category="social-impact"] {
+  border-color: var(--primary-yellow);
+}
+
+.category-card[data-category="social-impact"] .subtag.selected {
+  background: var(--primary-yellow);
+  color: var(--text-primary);
+}
+
+/* Native Time Input Styling */
+.time-input-native {
+  width: 100% !important;
+  height: 48px !important;
+  padding: 0 1rem 0 3rem !important;
+  border: none !important;
+  border-radius: 12px !important;
+  background: white !important;
+  color: var(--text-primary) !important;
+  font-size: 1rem !important;
+  font-family: inherit !important;
+  box-shadow: var(--neu-shadow-inset) !important;
+  transition: all 0.3s ease !important;
+}
+
+.time-input-native:hover,
+.time-input-native:focus {
+  box-shadow: var(--neu-shadow-pressed) !important;
+  outline: none !important;
+}
+
+.time-input-native::-webkit-calendar-picker-indicator {
+  display: none;
 } 

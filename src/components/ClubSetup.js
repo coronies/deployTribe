@@ -234,7 +234,7 @@ const ClubSetup = () => {
       // Clear validation error when field is updated
       if (validationErrors[field]) {
         setValidationErrors(prev => {
-          const newErrors = { ...prev };
+          const newErrors = {...prev};
           delete newErrors[field];
           return newErrors;
         });
@@ -242,6 +242,7 @@ const ClubSetup = () => {
       
       return newData;
     });
+    
     setIsDirty(true);
   };
 

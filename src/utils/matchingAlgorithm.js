@@ -127,6 +127,8 @@ export const calculateMatchScore = (quizResults, club) => {
   if (!quizResults || !club) return { total: 0, details: {} };
 
   console.log('🔍 === Starting Match Calculation for Club:', club.name, '===');
+  console.log('📊 Quiz Results:', quizResults);
+  console.log('🏛️ Club Data:', club);
   
   const matchDetails = {
     interestMatch: 0,
@@ -137,45 +139,116 @@ export const calculateMatchScore = (quizResults, club) => {
 
   // Interest match (40%)
   const interestWeight = 0.4;
-  const userTags = (quizResults.tags || []).map(tag => tag.toLowerCase());
-  const clubTags = (club.displayedTags || []).map(tag => tag.toLowerCase());
-  const matchingTags = clubTags.filter(tag => userTags.includes(tag));
+  const userTags = Array.isArray(quizResults.tags) 
+    ? quizResults.tags.map(tag => tag.toLowerCase())
+    : [];
   
-  matchDetails.interestMatch = (matchingTags.length / Math.max(clubTags.length, 1)) * 100;
-  console.log('🎯 Interest Match:', matchDetails.interestMatch + '%');
+  // Handle different club tag formats
+  let clubTags = [];
+  if (club.tags && Array.isArray(club.tags)) {
+    clubTags = club.tags.map(tag => {
+      // Handle "Category:Subtag" format
+      if (typeof tag === 'string' && tag.includes(':')) {
+        return tag.split(':')[1].toLowerCase();
+      }
+      return String(tag).toLowerCase();
+    });
+  } else if (club.displayedTags && Array.isArray(club.displayedTags)) {
+    clubTags = club.displayedTags.map(tag => String(tag).toLowerCase());
+  }
+  
+  console.log('🏷️ User Tags:', userTags);
+  console.log('🏷️ Club Tags:', clubTags);
+  
+  const matchingTags = userTags.filter(userTag => 
+    clubTags.some(clubTag => {
+      const normalizedUserTag = String(userTag).toLowerCase();
+      const normalizedClubTag = String(clubTag).toLowerCase();
+      return normalizedClubTag.includes(normalizedUserTag) || 
+             normalizedUserTag.includes(normalizedClubTag);
+    })
+  );
+  
+  matchDetails.interestMatch = clubTags.length > 0 
+    ? (matchingTags.length / Math.max(clubTags.length, userTags.length)) * 100 
+    : 0;
+  console.log('🎯 Interest Match:', matchDetails.interestMatch + '%', 'Matching tags:', matchingTags);
 
   // Commitment match (25%)
   const commitmentWeight = 0.25;
-  const commitmentLevels = {
-    'Low (1-2 hrs/week)': 1,
-    'Medium (3-5 hrs/week)': 2,
-    'High (6+ hrs/week)': 3
+  
+  // Map quiz commitment levels to numbers
+  const quizCommitmentMap = {
+    'Light': 1,
+    'Moderate': 2, 
+    'Standard': 3,
+    'Dedicated': 4,
+    'Intensive': 5
   };
   
-  const userCommitment = commitmentLevels[quizResults.timeCommitment] || 2;
-  const clubCommitment = commitmentLevels[club.timeCommitment] || 2;
+  // Map club commitment levels to numbers
+  const clubCommitmentMap = {
+    'Light': 1,
+    'Moderate': 2,
+    'Standard': 3, 
+    'Dedicated': 4,
+    'Intensive': 5
+  };
   
-  matchDetails.commitmentMatch = (1 - Math.abs(userCommitment - clubCommitment) / 2) * 100;
-  console.log('⏰ Commitment Match:', matchDetails.commitmentMatch + '%');
+  const userCommitment = quizCommitmentMap[quizResults.commitmentLevel] || 3;
+  const clubCommitment = clubCommitmentMap[club.commitmentLevel] || 3;
+  
+  matchDetails.commitmentMatch = Math.max(0, (1 - Math.abs(userCommitment - clubCommitment) / 4)) * 100;
+  console.log('⏰ Commitment Match:', matchDetails.commitmentMatch + '%', 
+    `User: ${quizResults.commitmentLevel}(${userCommitment}) vs Club: ${club.commitmentLevel}(${clubCommitment})`);
 
   // Experience match (20%)
   const experienceWeight = 0.2;
-  const experienceLevels = {
-    'Beginner Friendly': 1,
-    'Some Experience Required': 2,
-    'Advanced Skills Needed': 3
+  
+  // Map quiz experience levels to numbers
+  const quizExperienceMap = {
+    'Beginner': 1,
+    'Intermediate': 2,
+    'Advanced': 3
   };
   
-  const userExperience = experienceLevels[quizResults.experienceLevel] || 1;
-  const clubExperience = experienceLevels[club.experienceLevel] || 1;
+  // Map club experience levels to numbers  
+  const clubExperienceMap = {
+    'Beginner': 1,
+    'Intermediate': 2,
+    'Advanced': 3
+  };
   
-  matchDetails.experienceMatch = userExperience >= clubExperience ? 100 : 50;
-  console.log('📚 Experience Match:', matchDetails.experienceMatch + '%');
+  const userExperience = quizExperienceMap[quizResults.experienceLevel] || 1;
+  const clubExperience = clubExperienceMap[club.experienceLevel] || 1;
+  
+  // Give full points if user experience >= club requirement, partial if less
+  matchDetails.experienceMatch = userExperience >= clubExperience ? 100 : 
+    Math.max(0, (userExperience / clubExperience) * 70); // 70% max if under-qualified
+  console.log('📚 Experience Match:', matchDetails.experienceMatch + '%',
+    `User: ${quizResults.experienceLevel}(${userExperience}) vs Club: ${club.experienceLevel}(${clubExperience})`);
 
   // Time availability match (15%)
   const availabilityWeight = 0.15;
   const userAvailability = quizResults.availability || {};
-  const clubMeetingTimes = club.meetingTimes || {};
+  
+  // Handle different club meeting time formats
+  let clubMeetingTimes = {};
+  if (club.meetingTimes && Array.isArray(club.meetingTimes)) {
+    // Convert array format to object format
+    club.meetingTimes.forEach(meeting => {
+      if (meeting && meeting.day) {
+        const day = meeting.day.toLowerCase();
+        const timeSlot = `${meeting.startTime} - ${meeting.endTime}`;
+        if (!clubMeetingTimes[day]) {
+          clubMeetingTimes[day] = [];
+        }
+        clubMeetingTimes[day].push(timeSlot);
+      }
+    });
+  } else if (club.meetingTimes && typeof club.meetingTimes === 'object') {
+    clubMeetingTimes = club.meetingTimes;
+  }
   
   let availabilityScore = 0;
   let totalTimeSlots = 0;
@@ -184,17 +257,26 @@ export const calculateMatchScore = (quizResults, club) => {
     const clubTimes = clubMeetingTimes[day] || [];
     const userTimes = userAvailability[day] || [];
     
-    clubTimes.forEach(time => {
-      totalTimeSlots++;
-      if (userTimes.includes(time)) {
-        availabilityScore++;
+    clubTimes.forEach(clubTime => {
+      if (clubTime) {
+        totalTimeSlots++;
+        // Check if user has any availability on this day
+        if (userTimes.length > 0) {
+          // For now, give partial credit if user is available on the same day
+          availabilityScore += 0.5;
+          
+          // Check for exact time matches
+          if (userTimes.includes(clubTime)) {
+            availabilityScore += 0.5; // Full point for exact match
+          }
+        }
       }
     });
   });
   
   matchDetails.availabilityMatch = totalTimeSlots > 0 
-    ? (availabilityScore / totalTimeSlots) * 100 
-    : 100;
+    ? Math.min(100, (availabilityScore / totalTimeSlots) * 100)
+    : 100; // If no meeting times specified, assume flexible
   console.log('📅 Availability Match:', matchDetails.availabilityMatch + '%');
 
   // Calculate total match score
@@ -206,9 +288,10 @@ export const calculateMatchScore = (quizResults, club) => {
   );
 
   console.log('🎉 Total Match Score:', totalScore + '%');
+  console.log('=== End Match Calculation ===\n');
 
   return {
-    total: totalScore,
+    total: Math.max(0, Math.min(100, totalScore)), // Ensure score is between 0-100
     details: matchDetails
   };
 };

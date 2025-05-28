@@ -105,15 +105,20 @@ export function AuthProvider({ children }) {
 
   async function signup(email, password, userType, userData) {
     try {
+      console.log('AuthContext: Starting signup process', { email, userType });
+      
       // Step 1: Create auth user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      console.log('AuthContext: Auth user created successfully', user.uid);
 
       // Step 2: Prepare user data
       const userProfileData = {
         uid: user.uid,
         email: user.email,
         userType,
+        university: userData.university,
+        universityName: userData.universityName,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         isSetupComplete: userType === 'student',
@@ -130,13 +135,17 @@ export function AuthProvider({ children }) {
         })
       };
 
+      console.log('AuthContext: Prepared user profile data', userProfileData);
+
       // Step 3: Update auth profile
       await updateProfile(user, {
         displayName: userType === 'student' ? userData.name : userData.clubName
       });
+      console.log('AuthContext: Updated auth profile');
 
       // Step 4: Create user document
       await setDoc(doc(db, 'users', user.uid), userProfileData);
+      console.log('AuthContext: Created user document');
 
       // Step 5: If club, create club document
       if (userType === 'club') {
@@ -144,24 +153,47 @@ export function AuthProvider({ children }) {
           uid: user.uid,
           name: userData.clubName,
           description: userData.description,
+          university: userData.university,
+          universityName: userData.universityName,
           categories: [],
+          tags: {
+            interests: [],
+            commitment: '',
+            experience: []
+          },
           members: [user.uid],
           admins: [user.uid],
           events: [],
+          memberLimit: '',
+          meetingTimes: {},
+          profilePictureUrl: '',
+          faqs: [],
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          isSetupComplete: false
+          isSetupComplete: false,
+          setupProgress: 0,
+          createdBy: user.uid
         };
+        
         await setDoc(doc(db, 'clubs', user.uid), clubData);
+        console.log('AuthContext: Created club document');
       }
 
+      console.log('AuthContext: Signup completed successfully');
+      
       return {
         ...user,
         ...userProfileData
       };
     } catch (error) {
-      console.error('Signup error:', error);
-      throw error;
+      console.error('AuthContext: Signup error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      // Re-throw with more context
+      throw new Error(`Registration failed: ${error.message}`);
     }
   }
 
