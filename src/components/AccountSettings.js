@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { updatePassword, updateEmail } from 'firebase/auth';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { db, auth } from '../firebase/config';
-import { FiMoon, FiSun, FiGlobe, FiBell, FiLock, FiMail, FiPhone, FiUser } from 'react-icons/fi';
+import { FiMoon, FiSun, FiGlobe, FiBell, FiLock, FiMail, FiPhone } from 'react-icons/fi';
 import '../styles/AccountSettings.css';
 
 const AccountSettings = () => {
   const { currentUser, refreshUserData } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
   // General Settings State
   const [settings, setSettings] = useState({
-    theme: 'light',
+    theme: isDarkMode ? 'dark' : 'light',
     language: 'en',
     notifications: {
       email: true,
@@ -32,11 +34,20 @@ const AccountSettings = () => {
   // Account Details State
   const [accountDetails, setAccountDetails] = useState({
     email: currentUser?.email || '',
-    newEmail: '',
     phone: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
+  });
+
+  // Password validation state
+  const [passwordValidation, setPasswordValidation] = useState({
+    hasMinLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+    passwordsMatch: false
   });
 
   // Load user settings from Firestore
@@ -74,7 +85,8 @@ const AccountSettings = () => {
   const handleThemeChange = async (theme) => {
     try {
       setSettings(prev => ({ ...prev, theme }));
-      document.body.setAttribute('data-theme', theme);
+      toggleTheme(); // This will trigger the ThemeContext to update
+      document.documentElement.setAttribute('data-theme', theme);
       
       await updateDoc(doc(db, 'users', currentUser.uid), {
         'settings.theme': theme
@@ -132,51 +144,72 @@ const AccountSettings = () => {
     }
   };
 
-  // Handle email change
-  const handleEmailChange = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
+  // Validate password as user types
+  const validatePassword = (password, confirmPassword) => {
+    setPasswordValidation({
+      hasMinLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+      passwordsMatch: password === confirmPassword
+    });
+  };
 
-    try {
-      if (!accountDetails.newEmail) {
-        throw new Error('New email is required');
-      }
+  // Handle password input changes
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setAccountDetails(prev => ({
+      ...prev,
+      [name]: value
+    }));
 
-      await updateEmail(auth.currentUser, accountDetails.newEmail);
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        email: accountDetails.newEmail
-      });
-
-      setAccountDetails(prev => ({
-        ...prev,
-        email: accountDetails.newEmail,
-        newEmail: ''
-      }));
-      
-      await refreshUserData(auth.currentUser);
-      setSuccess('Email updated successfully');
-    } catch (error) {
-      setError(error.message || 'Failed to update email');
-    } finally {
-      setLoading(false);
+    if (name === 'newPassword' || name === 'confirmPassword') {
+      validatePassword(
+        name === 'newPassword' ? value : accountDetails.newPassword,
+        name === 'confirmPassword' ? value : accountDetails.confirmPassword
+      );
     }
   };
 
-  // Handle password change
-  const handlePasswordChange = async (e) => {
+  // Handle password update
+  const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     setLoading(true);
 
     try {
-      if (accountDetails.newPassword !== accountDetails.confirmPassword) {
-        throw new Error('Passwords do not match');
+      if (!accountDetails.currentPassword) {
+        throw new Error('Current password is required');
       }
 
-      await updatePassword(auth.currentUser, accountDetails.newPassword);
+      if (!accountDetails.newPassword) {
+        throw new Error('New password is required');
+      }
+
+      // Check if all password requirements are met
+      const validationFailed = Object.entries(passwordValidation)
+        .filter(([key]) => key !== 'passwordsMatch')
+        .some(([_, isValid]) => !isValid);
+
+      if (validationFailed) {
+        throw new Error('Password does not meet all requirements');
+      }
+
+      if (!passwordValidation.passwordsMatch) {
+        throw new Error('New passwords do not match');
+      }
+
+      // Re-authenticate user
+      const credential = EmailAuthProvider.credential(
+        currentUser.email,
+        accountDetails.currentPassword
+      );
+      await reauthenticateWithCredential(currentUser, credential);
+
+      // Update password
+      await updatePassword(currentUser, accountDetails.newPassword);
       
       setAccountDetails(prev => ({
         ...prev,
@@ -334,31 +367,18 @@ const AccountSettings = () => {
       <section className="settings-section">
         <h2>Account Details</h2>
         
-        {/* Email Settings */}
+        {/* Email Display */}
         <div className="setting-group">
           <h3><FiMail /> Email Address</h3>
-          <form onSubmit={handleEmailChange} className="detail-form">
-            <div className="form-group">
-              <label>Current Email</label>
-              <input
-                type="email"
-                value={accountDetails.email}
-                disabled
-              />
-            </div>
-            <div className="form-group">
-              <label>New Email</label>
-              <input
-                type="email"
-                value={accountDetails.newEmail}
-                onChange={(e) => setAccountDetails(prev => ({ ...prev, newEmail: e.target.value }))}
-                placeholder="Enter new email"
-              />
-            </div>
-            <button type="submit" disabled={loading}>
-              Update Email
-            </button>
-          </form>
+          <div className="form-group">
+            <input
+              type="email"
+              value={accountDetails.email}
+              disabled
+              className="readonly-input"
+            />
+            <p className="help-text">Contact support to change your email address</p>
+          </div>
         </div>
 
         {/* Phone Settings */}
@@ -383,13 +403,14 @@ const AccountSettings = () => {
         {/* Password Settings */}
         <div className="setting-group">
           <h3><FiLock /> Change Password</h3>
-          <form onSubmit={handlePasswordChange} className="detail-form">
+          <form onSubmit={handlePasswordUpdate} className="detail-form">
             <div className="form-group">
               <label>Current Password</label>
               <input
                 type="password"
+                name="currentPassword"
                 value={accountDetails.currentPassword}
-                onChange={(e) => setAccountDetails(prev => ({ ...prev, currentPassword: e.target.value }))}
+                onChange={handlePasswordChange}
                 placeholder="Enter current password"
               />
             </div>
@@ -397,21 +418,49 @@ const AccountSettings = () => {
               <label>New Password</label>
               <input
                 type="password"
+                name="newPassword"
                 value={accountDetails.newPassword}
-                onChange={(e) => setAccountDetails(prev => ({ ...prev, newPassword: e.target.value }))}
+                onChange={handlePasswordChange}
                 placeholder="Enter new password"
               />
+              <div className="password-requirements">
+                <p className={passwordValidation.hasMinLength ? 'valid' : ''}>
+                  ✓ At least 8 characters
+                </p>
+                <p className={passwordValidation.hasUpperCase ? 'valid' : ''}>
+                  ✓ At least one uppercase letter
+                </p>
+                <p className={passwordValidation.hasLowerCase ? 'valid' : ''}>
+                  ✓ At least one lowercase letter
+                </p>
+                <p className={passwordValidation.hasNumber ? 'valid' : ''}>
+                  ✓ At least one number
+                </p>
+                <p className={passwordValidation.hasSpecialChar ? 'valid' : ''}>
+                  ✓ At least one special character
+                </p>
+              </div>
             </div>
             <div className="form-group">
               <label>Confirm New Password</label>
               <input
                 type="password"
+                name="confirmPassword"
                 value={accountDetails.confirmPassword}
-                onChange={(e) => setAccountDetails(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                onChange={handlePasswordChange}
                 placeholder="Confirm new password"
               />
+              {accountDetails.confirmPassword && (
+                <p className={`password-match ${passwordValidation.passwordsMatch ? 'valid' : ''}`}>
+                  {passwordValidation.passwordsMatch ? '✓ Passwords match' : '✗ Passwords do not match'}
+                </p>
+              )}
             </div>
-            <button type="submit" disabled={loading}>
+            <button 
+              type="submit" 
+              disabled={loading || !Object.values(passwordValidation).every(Boolean)}
+              className={Object.values(passwordValidation).every(Boolean) ? 'ready' : ''}
+            >
               Update Password
             </button>
           </form>
