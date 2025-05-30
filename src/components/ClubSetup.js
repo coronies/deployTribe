@@ -157,7 +157,16 @@ const ClubSetup = () => {
         const querySnapshot = await getDocs(clubsQuery);
         if (!querySnapshot.empty) {
           const clubDoc = querySnapshot.docs[0];
-          const clubData = { id: clubDoc.id, ...clubDoc.data() };
+          const clubData = { 
+            id: clubDoc.id, 
+            ...clubDoc.data(),
+            // Ensure tags object exists with all required fields
+            tags: {
+              interests: clubDoc.data().tags?.interests || [],
+              commitment: clubDoc.data().tags?.commitment || '',
+              experience: clubDoc.data().tags?.experience || []
+            }
+          };
           setExistingClub(clubData);
           setClubData(clubData);
           setSelectedTimeSlots(clubData.meetingTimes || {});
@@ -192,11 +201,11 @@ const ClubSetup = () => {
     const totalRequirements = 5; // name, memberLimit, interests, commitment, experience
 
     // Check each required field
-    if (clubData.name) completedRequirements++;
+    if (clubData.name && clubData.name.trim()) completedRequirements++;
     if (clubData.memberLimit) completedRequirements++;
-    if (clubData.tags.interests.length >= 1 && clubData.tags.interests.length <= 5) completedRequirements++;
-    if (clubData.tags.commitment) completedRequirements++;
-    if (clubData.tags.experience.length > 0) completedRequirements++;
+    if (clubData.tags?.interests && Array.isArray(clubData.tags.interests) && clubData.tags.interests.length >= 1 && clubData.tags.interests.length <= 5) completedRequirements++;
+    if (clubData.tags?.commitment) completedRequirements++;
+    if (clubData.tags?.experience && Array.isArray(clubData.tags.experience) && clubData.tags.experience.length > 0) completedRequirements++;
 
     const progress = Math.round((completedRequirements / totalRequirements) * 100);
     
@@ -417,31 +426,48 @@ const ClubSetup = () => {
     setError('');
 
     try {
+      // Ensure club data has the correct structure
+      const clubDataToSave = {
+        ...clubData,
+        tags: {
+          interests: clubData.tags?.interests || [],
+          commitment: clubData.tags?.commitment || '',
+          experience: clubData.tags?.experience || []
+        },
+        meetingTimes: clubData.meetingTimes || {},
+        members: clubData.members || [],
+        faqs: clubData.faqs || []
+      };
+
       if (existingClub) {
         // Update existing club
         const clubRef = doc(db, 'clubs', existingClub.id);
         await updateDoc(clubRef, {
-          ...clubData,
+          ...clubDataToSave,
           updatedAt: serverTimestamp()
         });
+        setSuccess(true);
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setSuccess(false);
+        }, 3000);
       } else {
         // Create new club
         const clubRef = doc(collection(db, 'clubs'));
         await setDoc(clubRef, {
-          ...clubData,
+          ...clubDataToSave,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: currentUser.uid
         });
         await completeSetup();
+        // Only redirect if creating a new club
+        setTimeout(() => {
+          navigate('/club-dashboard');
+        }, 2000);
       }
 
-      setSuccess(true);
       setIsDirty(false);
-      
-      setTimeout(() => {
-        navigate('/club-dashboard');
-      }, 2000);
     } catch (error) {
       console.error('Error saving club:', error);
       setError(error.message);
@@ -474,12 +500,24 @@ const ClubSetup = () => {
             <span>{progress}%</span>
           </div>
         )}
+        {existingClub && (
+          <button 
+            type="button" 
+            className="update-button"
+            onClick={handleSubmit}
+            disabled={loading || !isFormValid || Object.keys(validationErrors).length > 0}
+          >
+            {loading ? 'Saving...' : 'Save Changes'}
+          </button>
+        )}
       </div>
 
       {error && <div className="error-message">{error}</div>}
       {success && (
         <div className="success-message">
-          {existingClub ? 'Club updated successfully!' : 'Club created successfully!'} Redirecting...
+          {existingClub 
+            ? 'Club settings updated successfully!' 
+            : 'Club created successfully! Redirecting to dashboard...'}
         </div>
       )}
 
@@ -641,15 +679,27 @@ const ClubSetup = () => {
           </div>
         </div>
 
-        <button 
-          type="submit" 
-          className="submit-button"
-          disabled={loading || !isFormValid || Object.keys(validationErrors).length > 0}
-        >
-          {loading ? (existingClub ? 'Saving...' : 'Creating...') : 
-           !isFormValid ? 'Please Fill Required Fields' : 
-           existingClub ? 'Save Changes' : 'Create Club'}
-        </button>
+        <div className="button-group">
+          <button 
+            type="submit" 
+            className="submit-button"
+            disabled={loading || !isFormValid || Object.keys(validationErrors).length > 0}
+          >
+            {loading ? (existingClub ? 'Saving...' : 'Creating...') : 
+             !isFormValid ? 'Please Fill Required Fields' : 
+             existingClub ? 'Save Changes' : 'Create Club'}
+          </button>
+          {existingClub && (
+            <button 
+              type="button" 
+              className="update-button mobile-only"
+              onClick={handleSubmit}
+              disabled={loading || !isFormValid || Object.keys(validationErrors).length > 0}
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );
