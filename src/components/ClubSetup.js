@@ -92,6 +92,7 @@ const ClubSetup = () => {
   const [selectedTimeSlots, setSelectedTimeSlots] = useState({});
   const [existingClub, setExistingClub] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const [clubData, setClubData] = useState({
     name: '',
@@ -458,12 +459,15 @@ const ClubSetup = () => {
           ...clubDataToSave,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          createdBy: currentUser.uid
+          createdBy: currentUser.uid,
+          status: 'ACTIVE'
         });
         await completeSetup();
-        // Only redirect if creating a new club
+        setIsSubmitted(true);
+        setSuccess(true);
+        // Navigate to explore page after 2 seconds
         setTimeout(() => {
-          navigate('/club-dashboard');
+          navigate('/clubs');
         }, 2000);
       }
 
@@ -488,7 +492,7 @@ const ClubSetup = () => {
     <div className="club-setup-container">
       <div className="setup-header">
         <h1>{existingClub ? 'Edit Club' : 'Create Your Club'}</h1>
-        {!existingClub && (
+        {!existingClub && !isSubmitted && (
           <div className="setup-progress">
             <div className="progress-bar">
               <div 
@@ -517,7 +521,7 @@ const ClubSetup = () => {
         <div className="success-message">
           {existingClub 
             ? 'Club settings updated successfully!' 
-            : 'Club created successfully! Redirecting to dashboard...'}
+            : 'Club created successfully! Redirecting to explore clubs...'}
         </div>
       )}
 
@@ -680,16 +684,27 @@ const ClubSetup = () => {
         </div>
 
         <div className="button-group">
-          <button 
-            type="submit" 
-            className="submit-button"
-            disabled={loading || !isFormValid || Object.keys(validationErrors).length > 0}
-          >
-            {loading ? (existingClub ? 'Saving...' : 'Creating...') : 
-             !isFormValid ? 'Please Fill Required Fields' : 
-             existingClub ? 'Save Changes' : 'Create Club'}
-          </button>
-          {existingClub && (
+          {!existingClub ? (
+            <>
+              <button 
+                type="submit" 
+                className="submit-button"
+                onClick={handleSubmit}
+                disabled={loading || !isFormValid || Object.keys(validationErrors).length > 0}
+              >
+                {loading ? 'Creating...' : !isFormValid ? 'Please Fill Required Fields' : 'Create Club'}
+              </button>
+              {!isSubmitted && (
+                <button 
+                  type="button" 
+                  className="skip-button"
+                  onClick={() => navigate('/clubs')}
+                >
+                  Skip & Explore Clubs
+                </button>
+              )}
+            </>
+          ) : (
             <button 
               type="button" 
               className="update-button mobile-only"

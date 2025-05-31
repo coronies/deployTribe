@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase/config';
-import { collection, addDoc, doc, updateDoc, arrayUnion, getDocs } from 'firebase/firestore';
-import { sampleClubs } from '../data/sampleClubs';
-import { FaGithub, FaLinkedin, FaTwitter, FaInstagram, FaDiscord, FaSlack, FaChevronDown, FaTimes } from 'react-icons/fa';
+import { FaGithub, FaLinkedin, FaTwitter, FaInstagram, FaDiscord, FaSlack, FaChevronDown } from 'react-icons/fa';
 import { getPersonalizedRecommendations } from '../services/recommendationService';
+import { getAllClubs, applyToClub } from '../services/clubService';
 import '../styles/Clubs.css';
 
 // Define the categories and their subcategories
@@ -56,12 +54,14 @@ const CATEGORIES = {
 };
 
 const getExperienceClass = (level) => {
-  const levelLower = level.toLowerCase();
+  if (!level || typeof level !== 'string') return 'value-button experience-beginner';
+  const levelLower = level.toLowerCase().replace(/\s+/g, '-');
   return `value-button experience-${levelLower}`;
 };
 
 const getCommitmentClass = (level) => {
-  const levelLower = level.toLowerCase();
+  if (!level || typeof level !== 'string') return 'value-button commitment-low';
+  const levelLower = level.toLowerCase().replace(/\s+/g, '-');
   return `value-button commitment-${levelLower}`;
 };
 
@@ -78,16 +78,13 @@ const Clubs = () => {
   const [recommendedClubs, setRecommendedClubs] = useState([]);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [showUserCreated, setShowUserCreated] = useState(true);
 
   useEffect(() => {
     const fetchClubs = async () => {
       try {
-        // For development, using sample data
-        const clubs = sampleClubs.map(club => ({
-          ...club,
-          image: `https://source.unsplash.com/800x600/?${club.tags[0].split(':')[1].toLowerCase()}`
-        }));
-        setClubs(clubs);
+        const fetchedClubs = await getAllClubs();
+        setClubs(fetchedClubs);
 
         // Get recommendations if user is logged in
         if (currentUser) {
@@ -115,27 +112,7 @@ const Clubs = () => {
         return;
       }
 
-      const applicationData = {
-        userId: currentUser.uid,
-        clubId: clubId,
-        status: 'PENDING',
-        appliedDate: new Date().toISOString(),
-        studentName: currentUser.displayName || currentUser.email,
-        clubName: clubs.find(club => club.id === clubId)?.name
-      };
-
-      const applicationRef = await addDoc(collection(db, 'applications'), applicationData);
-
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, {
-        applications: arrayUnion({
-          applicationId: applicationRef.id,
-          clubId: clubId,
-          status: 'PENDING',
-          appliedDate: applicationData.appliedDate
-        })
-      });
-
+      await applyToClub(clubId, currentUser.uid);
       setAppliedClubs([...appliedClubs, clubId]);
     } catch (error) {
       console.error('Error applying to club:', error);
@@ -163,26 +140,31 @@ const Clubs = () => {
     }
   };
 
-  const closeModal = () => {
-    setActiveModal(null);
-  };
-
   const filteredClubs = clubs.filter(club => {
+    // Filter by search term
     const matchesSearch = club.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      club.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      club.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      club.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      club.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
     if (!matchesSearch) return false;
 
+    // Filter by user created if toggle is off
+    if (!showUserCreated && club.is_user_created) return false;
+
+    // Filter by subcategories
     if (selectedSubcategories.length === 0) return true;
 
-    return club.tags.some(tag => {
+    return club.tags?.some(tag => {
       const [category, value] = tag.split(':');
       return selectedSubcategories.includes(value);
     });
   });
 
   const displayedClubs = showRecommendations ? recommendedClubs : filteredClubs;
+
+  if (loading) {
+    return <div className="loading">Loading clubs...</div>;
+  }
 
   return (
     <div className="clubs-container">
@@ -208,19 +190,26 @@ const Clubs = () => {
               All
             </button>
             {currentUser && (
-              <button
-                className={`category-main recommendation-toggle ${showRecommendations ? 'active' : ''}`}
-                onClick={() => setShowRecommendations(!showRecommendations)}
-                disabled={loadingRecommendations}
-              >
-                {loadingRecommendations ? 'Loading...' : 'Show Recommendations'}
-              </button>
+              <>
+                <button
+                  className={`category-main recommendation-toggle ${showRecommendations ? 'active' : ''}`}
+                  onClick={() => setShowRecommendations(!showRecommendations)}
+                  disabled={loadingRecommendations}
+                >
+                  {loadingRecommendations ? 'Loading...' : 'Show Recommendations'}
+                </button>
+                <button
+                  className={`category-main user-created-toggle ${showUserCreated ? 'active' : ''}`}
+                  onClick={() => setShowUserCreated(!showUserCreated)}
+                >
+                  {showUserCreated ? 'Hide User Created' : 'Show User Created'}
+                </button>
+              </>
             )}
             {Object.entries(CATEGORIES).map(([category, subcategories]) => (
-              <div key={category} className="category-group" data-category={category}>
+              <div key={category} className="category-group">
                 <button 
                   className={`category-main ${activeModal === category ? 'active' : ''}`}
-                  data-category={category}
                   onClick={() => handleCategorySelect(category)}
                 >
                   {category}
@@ -260,105 +249,135 @@ const Clubs = () => {
       </div>
 
       <div className="clubs-grid">
-        {displayedClubs.map(club => (
-          <div 
-            key={club.id} 
-            className="club-card"
-            data-category={club.tags[0].split(':')[0]}
-          >
-            <img src={club.image} alt={club.name} className="club-image" />
-            {showRecommendations && (
-              <div className="recommended-badge">
-                {Math.round(club.score * 100)}% Match
+        {displayedClubs.map(club => {
+          const categoryTag = club.tags?.find(tag => tag.includes(':'));
+          const category = categoryTag ? categoryTag.split(':')[0] : 'General';
+          
+          return (
+            <div 
+              key={club.id} 
+              className={`club-card ${club.is_user_created ? 'user-created' : ''}`}
+              data-category={category}
+            >
+              {club.is_user_created && (
+                <div className="user-created-badge">
+                  <span className="badge-icon">👤</span>
+                  User Created
+                </div>
+              )}
+              <img 
+                src={club.logo_url || club.image_url || `https://source.unsplash.com/800x600/?${club.tags?.[0]?.split(':')[1]?.toLowerCase() || 'club'}`} 
+                alt={club.name} 
+                className="club-image" 
+              />
+              {showRecommendations && (
+                <div className="recommended-badge">
+                  {Math.round(club.score * 100)}% Match
+                </div>
+              )}
+              <div className="club-header">
+                <h2>{club.name}</h2>
+                {club.is_user_created && club.created_by_name && (
+                  <div className="creator-info">
+                    <img 
+                      src={club.created_by_image || '/default-avatar.png'} 
+                      alt={club.created_by_name} 
+                      className="creator-avatar"
+                    />
+                    <span>Created by {club.created_by_name}</span>
+                  </div>
+                )}
               </div>
-            )}
-            <div className="club-header">
-              <h2>{club.name}</h2>
-            </div>
-            <p className="club-description">{club.description}</p>
-            <div className="club-info">
-              <div className="info-row">
-                <span className="info-label">Experience:</span>
-                <span className={getExperienceClass(club.experienceLevel)}>
-                  {club.experienceLevel}
-                </span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Commitment:</span>
-                <span className={getCommitmentClass(club.commitmentLevel)}>
-                  {club.commitmentLevel}
-                </span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Application:</span>
-                <span className={`application-status ${club.applicationRequired ? 'application-based' : 'open'}`}>
-                  {club.applicationRequired ? 'Application Required' : 'Open to Join'}
-                </span>
-              </div>
-            </div>
-            <div className="club-tags">
-              {club.tags.map((tag, index) => {
-                const [category, value] = tag.split(':');
-                return (
-                  <span 
-                    key={index} 
-                    className="club-tag"
-                    data-category={category}
-                  >
-                    {value}
+              <p className="club-description">{club.description}</p>
+              
+              <div className="club-info">
+                <div className="info-row">
+                  <span className="info-label">Experience:</span>
+                  <span className={getExperienceClass(club.experience_level)}>
+                    {club.experience_level || 'Beginner Friendly'}
                   </span>
-                );
-              })}
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Commitment:</span>
+                  <span className={`value-button commitment-${(club.commitment_level || 'low').toLowerCase()}`}>
+                    {club.commitment_level || 'Low (1-2 hrs/week)'}
+                  </span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Application:</span>
+                  <span className={`application-status ${club.application_required ? 'application-based' : 'open'}`}>
+                    {club.application_required ? 'Application Required' : 'Open to Join'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="club-tags">
+                {club.tags?.map((tag, index) => {
+                  const [category, value] = tag.split(':');
+                  if (!category || !value) return null;
+                  return (
+                    <span 
+                      key={index} 
+                      className="club-tag"
+                      data-category={category}
+                    >
+                      {value}
+                    </span>
+                  );
+                })}
+              </div>
+
+              <div className="social-links">
+                {club.social_links?.github && (
+                  <a href={club.social_links.github} target="_blank" rel="noopener noreferrer" className="social-link github">
+                    <FaGithub />
+                  </a>
+                )}
+                {club.social_links?.linkedin && (
+                  <a href={club.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="social-link linkedin">
+                    <FaLinkedin />
+                  </a>
+                )}
+                {club.social_links?.twitter && (
+                  <a href={club.social_links.twitter} target="_blank" rel="noopener noreferrer" className="social-link twitter">
+                    <FaTwitter />
+                  </a>
+                )}
+                {club.social_links?.instagram && (
+                  <a href={club.social_links.instagram} target="_blank" rel="noopener noreferrer" className="social-link instagram">
+                    <FaInstagram />
+                  </a>
+                )}
+                {club.social_links?.discord && (
+                  <a href={club.social_links.discord} target="_blank" rel="noopener noreferrer" className="social-link discord">
+                    <FaDiscord />
+                  </a>
+                )}
+                {club.social_links?.slack && (
+                  <a href={club.social_links.slack} target="_blank" rel="noopener noreferrer" className="social-link slack">
+                    <FaSlack />
+                  </a>
+                )}
+              </div>
+
+              <div className="club-actions">
+                <button 
+                  className="apply-button"
+                  onClick={() => handleApply(club.id)}
+                  disabled={appliedClubs.includes(club.id)}
+                >
+                  {appliedClubs.includes(club.id) ? 'Applied' : 'Apply Now'}
+                </button>
+                <button 
+                  className="learn-more-button"
+                  onClick={() => navigate(`/clubs/${club.id}`)}
+                >
+                  Learn More
+                </button>
+              </div>
             </div>
-            <div className="social-links">
-              {club.socialLinks.github && (
-                <a href={club.socialLinks.github} target="_blank" rel="noopener noreferrer" className="social-link github">
-                  <FaGithub />
-                </a>
-              )}
-              {club.socialLinks.linkedin && (
-                <a href={club.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="social-link linkedin">
-                  <FaLinkedin />
-                </a>
-              )}
-              {club.socialLinks.twitter && (
-                <a href={club.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="social-link twitter">
-                  <FaTwitter />
-                </a>
-              )}
-              {club.socialLinks.instagram && (
-                <a href={club.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="social-link instagram">
-                  <FaInstagram />
-                </a>
-              )}
-              {club.socialLinks.discord && (
-                <a href={club.socialLinks.discord} target="_blank" rel="noopener noreferrer" className="social-link discord">
-                  <FaDiscord />
-                </a>
-              )}
-              {club.socialLinks.slack && (
-                <a href={club.socialLinks.slack} target="_blank" rel="noopener noreferrer" className="social-link slack">
-                  <FaSlack />
-                </a>
-              )}
-            </div>
-            <div className="button-group">
-              <button 
-                className="apply-button"
-                onClick={() => handleApply(club.id)}
-                disabled={appliedClubs.includes(club.id)}
-              >
-                {appliedClubs.includes(club.id) ? 'Applied' : 'Apply Now'}
-              </button>
-              <button 
-                className="learn-more-button"
-                onClick={() => navigate(`/clubs/${club.id}`)}
-              >
-                Learn More
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

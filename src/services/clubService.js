@@ -1,157 +1,255 @@
-import { 
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  updateDoc,
-  arrayUnion,
-  arrayRemove
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../firebase/config';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Create or update a club
 export async function createClub(clubData, logoFile) {
   try {
-    const clubRef = doc(collection(db, 'clubs'));
-    let logoUrl = '';
-
-    if (logoFile) {
-      const storageRef = ref(storage, `club-logos/${clubRef.id}`);
-      await uploadBytes(storageRef, logoFile);
-      logoUrl = await getDownloadURL(storageRef);
-    }
-
-    await setDoc(clubRef, {
-      ...clubData,
-      logoUrl,
-      createdAt: new Date().toISOString(),
-      members: [],
-      events: [],
-      analytics: {
-        totalViews: 0,
-        totalMembers: 0,
-        eventAttendance: []
-      }
+    const response = await fetch(`${API_URL}/clubs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...clubData,
+        logo_url: logoFile ? logoFile.url : null,
+      }),
     });
 
-    return clubRef.id;
+    if (!response.ok) {
+      throw new Error('Failed to create club');
+    }
+
+    const data = await response.json();
+    return data.id;
   } catch (error) {
+    console.error('Error creating club:', error);
     throw error;
   }
 }
 
 // Get club details
 export async function getClub(clubId) {
-  const clubDoc = await getDoc(doc(db, 'clubs', clubId));
-  return clubDoc.data();
+  try {
+    const response = await fetch(`${API_URL}/clubs/${clubId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch club');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching club:', error);
+    throw error;
+  }
+}
+
+// Get all clubs
+export async function getAllClubs() {
+  try {
+    const response = await fetch(`${API_URL}/clubs`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch clubs');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching clubs:', error);
+    throw error;
+  }
 }
 
 // Join a club
 export async function joinClub(clubId, userId) {
-  const clubRef = doc(db, 'clubs', clubId);
-  await updateDoc(clubRef, {
-    members: arrayUnion(userId)
-  });
+  try {
+    const response = await fetch(`${API_URL}/clubs/${clubId}/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to join club');
+    }
+  } catch (error) {
+    console.error('Error joining club:', error);
+    throw error;
+  }
 }
 
 // Leave a club
 export async function leaveClub(clubId, userId) {
-  const clubRef = doc(db, 'clubs', clubId);
-  await updateDoc(clubRef, {
-    members: arrayRemove(userId)
-  });
+  try {
+    const response = await fetch(`${API_URL}/clubs/${clubId}/leave`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to leave club');
+    }
+  } catch (error) {
+    console.error('Error leaving club:', error);
+    throw error;
+  }
 }
 
 // Create a club event
 export async function createEvent(clubId, eventData) {
-  const eventRef = doc(collection(db, 'events'));
-  await setDoc(eventRef, {
-    ...eventData,
-    clubId,
-    createdAt: new Date().toISOString(),
-    attendees: [],
-    isVirtual: eventData.isVirtual || false,
-    virtualMeetingUrl: eventData.virtualMeetingUrl || null
-  });
+  try {
+    const response = await fetch(`${API_URL}/clubs/${clubId}/events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(eventData),
+    });
 
-  // Update club's events array
-  const clubRef = doc(db, 'clubs', clubId);
-  await updateDoc(clubRef, {
-    events: arrayUnion(eventRef.id)
-  });
+    if (!response.ok) {
+      throw new Error('Failed to create event');
+    }
 
-  return eventRef.id;
+    const data = await response.json();
+    return data.id;
+  } catch (error) {
+    console.error('Error creating event:', error);
+    throw error;
+  }
 }
 
-// Get club recommendations based on user interests
+// Get club recommendations
 export async function getRecommendedClubs(userInterests) {
-  const clubsRef = collection(db, 'clubs');
-  const q = query(clubsRef, where('tags', 'array-contains-any', userInterests));
-  const querySnapshot = await getDocs(q);
-  
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+  try {
+    const response = await fetch(`${API_URL}/clubs/recommendations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ interests: userInterests }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get recommendations');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting recommendations:', error);
+    throw error;
+  }
 }
 
 // Get club analytics
 export async function getClubAnalytics(clubId) {
-  const clubDoc = await getDoc(doc(db, 'clubs', clubId));
-  return clubDoc.data()?.analytics || {};
+  try {
+    const response = await fetch(`${API_URL}/clubs/${clubId}/analytics`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch club analytics');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching club analytics:', error);
+    throw error;
+  }
 }
 
 // Update club analytics
 export async function updateClubAnalytics(clubId, analyticsData) {
-  const clubRef = doc(db, 'clubs', clubId);
-  await updateDoc(clubRef, {
-    'analytics': analyticsData
-  });
+  try {
+    const response = await fetch(`${API_URL}/clubs/${clubId}/analytics`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(analyticsData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update analytics');
+    }
+  } catch (error) {
+    console.error('Error updating analytics:', error);
+    throw error;
+  }
 }
 
-// Get all upcoming events
+// Get upcoming events
 export async function getUpcomingEvents(filters = {}) {
-  const eventsRef = collection(db, 'events');
-  let q = query(eventsRef, where('date', '>=', new Date().toISOString()));
-  
-  if (filters.category) {
-    q = query(q, where('category', '==', filters.category));
-  }
-  
-  if (filters.isVirtual !== undefined) {
-    q = query(q, where('isVirtual', '==', filters.isVirtual));
-  }
+  try {
+    const queryParams = new URLSearchParams();
+    if (filters.category) queryParams.append('category', filters.category);
+    if (filters.isVirtual !== undefined) queryParams.append('isVirtual', filters.isVirtual);
 
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+    const response = await fetch(`${API_URL}/events/upcoming?${queryParams}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch upcoming events');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching upcoming events:', error);
+    throw error;
+  }
 }
 
 // Get sponsorship opportunities
 export async function getSponsorshipOpportunities() {
-  const sponsorshipsRef = collection(db, 'sponsorships');
-  const querySnapshot = await getDocs(sponsorshipsRef);
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+  try {
+    const response = await fetch(`${API_URL}/sponsorships`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch sponsorship opportunities');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching sponsorship opportunities:', error);
+    throw error;
+  }
 }
 
 // Apply for sponsorship
 export async function applyForSponsorship(clubId, sponsorshipId, applicationData) {
-  const applicationRef = doc(collection(db, 'sponsorshipApplications'));
-  await setDoc(applicationRef, {
-    clubId,
-    sponsorshipId,
-    ...applicationData,
-    status: 'pending',
-    submittedAt: new Date().toISOString()
-  });
-  return applicationRef.id;
+  try {
+    const response = await fetch(`${API_URL}/sponsorships/${sponsorshipId}/apply`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        clubId,
+        ...applicationData,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to apply for sponsorship');
+    }
+
+    const data = await response.json();
+    return data.id;
+  } catch (error) {
+    console.error('Error applying for sponsorship:', error);
+    throw error;
+  }
+}
+
+// Apply to a club
+export async function applyToClub(clubId, userId) {
+  try {
+    const response = await fetch(`${API_URL}/clubs/${clubId}/apply`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to apply to club');
+    }
+
+    const data = await response.json();
+    return data.id;
+  } catch (error) {
+    console.error('Error applying to club:', error);
+    throw error;
+  }
 } 

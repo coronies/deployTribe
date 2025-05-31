@@ -92,7 +92,12 @@ body {
   display: flex;
   gap: 1rem;
   margin-top: 2rem;
-  justify-content: flex-end;
+  justify-content: center;
+}
+
+.button-group button {
+  flex: 1;
+  max-width: 300px;
 }
 
 .mobile-only {
@@ -996,4 +1001,22 @@ select:focus {
   content: " (Optional)";
   color: var(--text-secondary);
   font-weight: normal;
+}
+
+.skip-button {
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.skip-button:hover {
+  background: var(--bg-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 } 
