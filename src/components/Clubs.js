@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { FaGithub, FaLinkedin, FaTwitter, FaInstagram, FaDiscord, FaSlack, FaChevronDown } from 'react-icons/fa';
-import { getPersonalizedRecommendations } from '../services/recommendationService';
+import { FaGithub, FaLinkedin, FaTwitter, FaInstagram, FaDiscord, FaSlack } from 'react-icons/fa';
+import { FiSearch, FiX, FiStar } from 'react-icons/fi';
 import { getAllClubs, applyToClub } from '../services/clubService';
 import '../styles/Clubs.css';
 
@@ -53,32 +53,25 @@ const CATEGORIES = {
   ]
 };
 
-const getExperienceClass = (level) => {
-  if (!level || typeof level !== 'string') return 'value-button experience-beginner';
-  const levelLower = level.toLowerCase().replace(/\s+/g, '-');
-  return `value-button experience-${levelLower}`;
-};
 
-const getCommitmentClass = (level) => {
-  if (!level || typeof level !== 'string') return 'value-button commitment-low';
-  const levelLower = level.toLowerCase().replace(/\s+/g, '-');
-  return `value-button commitment-${levelLower}`;
-};
 
 const Clubs = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [clubs, setClubs] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubcategories, setSelectedSubcategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedClubs, setAppliedClubs] = useState([]);
-  const [activeModal, setActiveModal] = useState(null);
   const [recommendedClubs, setRecommendedClubs] = useState([]);
   const [showRecommendations, setShowRecommendations] = useState(false);
-  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
-  const [showUserCreated, setShowUserCreated] = useState(true);
+  const [showUserCreated] = useState(true);
+  const [showTagsDropdown, setShowTagsDropdown] = useState(false);
+  const [filters, setFilters] = useState({
+    experience: 'All',
+    commitment: 'All'
+  });
 
   useEffect(() => {
     const fetchClubs = async () => {
@@ -86,19 +79,20 @@ const Clubs = () => {
         const fetchedClubs = await getAllClubs();
         setClubs(fetchedClubs);
 
-        // Get recommendations if user is logged in
+        // Simulate recommendations with matching percentages
         if (currentUser) {
-          setLoadingRecommendations(true);
-          const recommendations = await getPersonalizedRecommendations(currentUser.uid);
+          const recommendations = [
+            { ...fetchedClubs[0], score: 0.95 }, // Software Development Club - 95% match
+            { ...fetchedClubs[3], score: 0.88 }, // Data Science Club - 88% match
+            { ...fetchedClubs[5], score: 0.82 }, // Game Development Club - 82% match
+          ];
           setRecommendedClubs(recommendations);
-          setLoadingRecommendations(false);
         }
 
         setLoading(false);
       } catch (error) {
         console.error('Error fetching clubs:', error);
         setLoading(false);
-        setLoadingRecommendations(false);
       }
     };
 
@@ -120,24 +114,26 @@ const Clubs = () => {
     }
   };
 
-  const handleCategorySelect = (category, subcategory = null) => {
-    if (category === 'All') {
-      setSelectedCategory('All');
-      setSelectedSubcategories([]);
-      setActiveModal(null);
-      return;
-    }
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
 
-    if (subcategory) {
+  const handleCategorySelect = (category, tag) => {
+    if (tag) {
       setSelectedSubcategories(prev => {
-        const newSelection = prev.includes(subcategory)
-          ? prev.filter(item => item !== subcategory)
-          : [...prev, subcategory];
-        return newSelection;
+        if (prev.includes(tag)) {
+          return prev.filter(t => t !== tag);
+        }
+        return [...prev, tag];
       });
     } else {
-      setActiveModal(activeModal === category ? null : category);
+      setSelectedCategory(category);
+      setSelectedSubcategories([]);
     }
+    setShowTagsDropdown(false);
   };
 
   const filteredClubs = clubs.filter(club => {
@@ -155,12 +151,27 @@ const Clubs = () => {
     if (selectedSubcategories.length === 0) return true;
 
     return club.tags?.some(tag => {
-      const [category, value] = tag.split(':');
+      const [, value] = tag.split(':');
       return selectedSubcategories.includes(value);
     });
   });
 
   const displayedClubs = showRecommendations ? recommendedClubs : filteredClubs;
+
+  const getMainCategory = (tags) => {
+    const categoryTag = tags.find(tag => 
+      tag.startsWith('Technology:') || 
+      tag.startsWith('Business:') || 
+      tag.startsWith('Arts:') || 
+      tag.startsWith('Science:') || 
+      tag.startsWith('Social:')
+    );
+    
+    if (categoryTag) {
+      return categoryTag.split(':')[0];
+    }
+    return 'Technology';
+  };
 
   if (loading) {
     return <div className="loading">Loading clubs...</div>;
@@ -170,94 +181,159 @@ const Clubs = () => {
     <div className="clubs-container">
       <div className="clubs-header">
         <h1>Discover Your Perfect Club</h1>
-        <div className="search-filters">
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Search clubs by name, description, or tags..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
-        </div>
-        <div className="filter-section">
-          <div className="filter-categories">
-            <button 
-              className={`category-main all-button ${selectedCategory === 'All' && selectedSubcategories.length === 0 ? 'active' : ''}`}
-              onClick={() => handleCategorySelect('All')}
-            >
-              All
-            </button>
-            {currentUser && (
-              <>
-                <button
-                  className={`category-main recommendation-toggle ${showRecommendations ? 'active' : ''}`}
-                  onClick={() => setShowRecommendations(!showRecommendations)}
-                  disabled={loadingRecommendations}
-                >
-                  {loadingRecommendations ? 'Loading...' : 'Show Recommendations'}
-                </button>
-                <button
-                  className={`category-main user-created-toggle ${showUserCreated ? 'active' : ''}`}
-                  onClick={() => setShowUserCreated(!showUserCreated)}
-                >
-                  {showUserCreated ? 'Hide User Created' : 'Show User Created'}
-                </button>
-              </>
-            )}
-            {Object.entries(CATEGORIES).map(([category, subcategories]) => (
-              <div key={category} className="category-group">
-                <button 
-                  className={`category-main ${activeModal === category ? 'active' : ''}`}
-                  onClick={() => handleCategorySelect(category)}
-                >
-                  {category}
-                  <FaChevronDown 
-                    style={{ 
-                      fontSize: '0.8em',
-                      transform: activeModal === category ? 'rotate(180deg)' : 'none',
-                      transition: 'transform 0.3s ease'
-                    }} 
-                  />
-                </button>
-                {activeModal === category && (
-                  <div className="dropdown-content active">
-                    <div className="subcategories-grid">
-                      {subcategories.map(subcategory => (
-                        <button
-                          key={subcategory}
-                          className={`subcategory ${selectedSubcategories.includes(subcategory) ? 'active' : ''}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCategorySelect(category, subcategory);
-                          }}
-                        >
-                          {subcategory}
-                          {selectedSubcategories.includes(subcategory) && (
-                            <span className="check-icon">✓</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+      </div>
+
+      <div className="search-section">
+        <div className="search-container">
+          <div className="search-wrapper">
+            <form onSubmit={(e) => e.preventDefault()} className="search-bar">
+              <div className="search-input-wrapper">
+                <FiSearch className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search clubs by name, description, or tags..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button 
+                    type="button" 
+                    className="clear-search" 
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <FiX />
+                  </button>
                 )}
               </div>
-            ))}
+            </form>
           </div>
         </div>
       </div>
 
+      <div className="filters-section">
+        <div className="filters-header">
+          <div className="filters-row">
+            <button 
+              className={`category-btn ${!selectedCategory ? 'active' : ''}`}
+              onClick={() => {
+                setSelectedCategory(null);
+                setSelectedSubcategories([]);
+                setShowRecommendations(false);
+              }}
+            >
+              All
+            </button>
+            {currentUser && (
+              <button 
+                className={`category-btn recommendation-btn ${showRecommendations ? 'active' : ''}`}
+                onClick={() => setShowRecommendations(!showRecommendations)}
+              >
+                <FiStar style={{ marginRight: '6px' }} />
+                Show Recommended
+              </button>
+            )}
+            {Object.entries(CATEGORIES).map(([category]) => (
+              <button
+                key={category}
+                className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
+                onClick={() => handleCategorySelect(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filters-content">
+          <div className="filter-group">
+            <label>Experience</label>
+            <select
+              value={filters.experience || 'All'}
+              onChange={(e) => handleFilterChange('experience', e.target.value)}
+            >
+              <option value="All">All Levels</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Commitment</label>
+            <select
+              value={filters.commitment || 'All'}
+              onChange={(e) => handleFilterChange('commitment', e.target.value)}
+            >
+              <option value="All">All</option>
+              <option value="Low">Low (1-2 hrs/week)</option>
+              <option value="Medium">Medium (3-5 hrs/week)</option>
+              <option value="High">High (6+ hrs/week)</option>
+            </select>
+          </div>
+
+          <div className="filter-group tags-dropdown">
+            <label>Tags</label>
+            <div className="dropdown-wrapper">
+              <button 
+                type="button"
+                className="tags-dropdown-button"
+                onClick={() => setShowTagsDropdown(!showTagsDropdown)}
+              >
+                {selectedSubcategories.length > 0 ? `${selectedSubcategories.length} selected` : 'Select Tags'}
+              </button>
+              {showTagsDropdown && (
+                <div className="tags-dropdown">
+                  <div className="tags-grid">
+                    {selectedCategory 
+                      ? CATEGORIES[selectedCategory].map(tag => (
+                          <button
+                            key={tag}
+                            type="button"
+                            className={`tag-button ${selectedSubcategories.includes(tag) ? 'active' : ''}`}
+                            onClick={() => handleCategorySelect(selectedCategory, tag)}
+                          >
+                            {tag}
+                          </button>
+                        ))
+                      : Object.values(CATEGORIES).flat().map(tag => (
+                          <button
+                            key={tag}
+                            type="button"
+                            className={`tag-button ${selectedSubcategories.includes(tag) ? 'active' : ''}`}
+                            onClick={() => handleCategorySelect(null, tag)}
+                          >
+                            {tag}
+                          </button>
+                        ))
+                    }
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {selectedSubcategories.length > 0 && (
+          <div className="selected-tags">
+            {selectedSubcategories.map(tag => (
+              <span key={tag} className="selected-tag">
+                {tag}
+                <button onClick={() => handleCategorySelect(selectedCategory, tag)}>×</button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="clubs-grid">
-        {displayedClubs.map(club => {
-          const categoryTag = club.tags?.find(tag => tag.includes(':'));
-          const category = categoryTag ? categoryTag.split(':')[0] : 'General';
+        {displayedClubs.map((club, index) => {
+          const mainCategory = getMainCategory(club.tags);
           
           return (
             <div 
-              key={club.id} 
+              key={index}
               className={`club-card ${club.is_user_created ? 'user-created' : ''}`}
-              data-category={category}
+              data-category={mainCategory}
             >
               {club.is_user_created && (
                 <div className="user-created-badge">
@@ -266,7 +342,7 @@ const Clubs = () => {
                 </div>
               )}
               <img 
-                src={club.logo_url || club.image_url || `https://source.unsplash.com/800x600/?${club.tags?.[0]?.split(':')[1]?.toLowerCase() || 'club'}`} 
+                src={club.image || club.logo_url || club.image_url || `https://source.unsplash.com/800x600/?${club.tags?.[0]?.split(':')[1]?.toLowerCase() || 'club'}`} 
                 alt={club.name} 
                 className="club-image" 
               />
@@ -290,41 +366,27 @@ const Clubs = () => {
               </div>
               <p className="club-description">{club.description}</p>
               
-              <div className="club-info">
-                <div className="info-row">
-                  <span className="info-label">Experience:</span>
-                  <span className={getExperienceClass(club.experience_level)}>
-                    {club.experience_level || 'Beginner Friendly'}
-                  </span>
+              <div className="club-details">
+                <div className="detail-row">
+                  <span className="detail-label">Experience:</span>
+                  <span className="badge badge-success">Beginner Friendly</span>
                 </div>
-                <div className="info-row">
-                  <span className="info-label">Commitment:</span>
-                  <span className={`value-button commitment-${(club.commitment_level || 'low').toLowerCase()}`}>
-                    {club.commitment_level || 'Low (1-2 hrs/week)'}
-                  </span>
+                <div className="detail-row">
+                  <span className="detail-label">Commitment:</span>
+                  <span className="badge badge-neutral">Low (1-2 hrs/week)</span>
                 </div>
-                <div className="info-row">
-                  <span className="info-label">Application:</span>
-                  <span className={`application-status ${club.application_required ? 'application-based' : 'open'}`}>
-                    {club.application_required ? 'Application Required' : 'Open to Join'}
-                  </span>
+                <div className="detail-row">
+                  <span className="detail-label">Application:</span>
+                  <span className="badge badge-info">Open to Join</span>
                 </div>
               </div>
 
               <div className="club-tags">
-                {club.tags?.map((tag, index) => {
-                  const [category, value] = tag.split(':');
-                  if (!category || !value) return null;
-                  return (
-                    <span 
-                      key={index} 
-                      className="club-tag"
-                      data-category={category}
-                    >
-                      {value}
-                    </span>
-                  );
-                })}
+                {club.tags.map((tag, index) => (
+                  <span key={index} className={`badge ${tag.replace(':', '-')}`}>
+                    {tag.split(':')[1]}
+                  </span>
+                ))}
               </div>
 
               <div className="social-links">

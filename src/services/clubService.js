@@ -1,3 +1,4 @@
+import sampleClubs from '../data/sampleClubs';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Create or update a club
@@ -42,6 +43,10 @@ export async function getClub(clubId) {
 
 // Get all clubs
 export async function getAllClubs() {
+  // For local demo, return sample clubs directly
+  return sampleClubs;
+  // Uncomment below to use API again
+  /*
   try {
     const response = await fetch(`${API_URL}/clubs`);
     if (!response.ok) {
@@ -52,6 +57,7 @@ export async function getAllClubs() {
     console.error('Error fetching clubs:', error);
     throw error;
   }
+  */
 }
 
 // Join a club

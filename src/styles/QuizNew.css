@@ -32,12 +32,14 @@
 
 body {
   background-color: white;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .quiz-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .quiz-header {
@@ -50,11 +52,13 @@ body {
   color: var(--text-primary);
   margin-bottom: 1rem;
   font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .quiz-header .subtitle {
   color: var(--text-secondary);
   font-size: 1rem;
+  font-family: 'Roboto Mono', monospace;
 }
 
 /* Quiz Progress Dots */
@@ -96,6 +100,7 @@ body {
   margin-bottom: 0.5rem;
   text-align: center;
   font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
 }
 
 /* Categories Grid */
@@ -147,6 +152,7 @@ body {
   color: var(--text-primary);
   margin: 0;
   font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .selected-count {
@@ -154,6 +160,7 @@ body {
   color: var(--text-secondary);
   margin-left: 0.5rem;
   font-weight: normal;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .subtags {
@@ -177,6 +184,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .subtag:hover {
@@ -260,6 +268,7 @@ body {
 .slider-label {
   text-align: center;
   font-weight: 500;
+  font-family: 'Roboto Mono', monospace;
 }
 
 /* Experience Level Labels */
@@ -379,6 +388,7 @@ body {
   color: #1E293B;
   display: flex;
   align-items: center;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .time-slots {
@@ -405,11 +415,13 @@ body {
   text-align: center !important;
   width: 100% !important;
   position: relative !important;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .time-text {
   position: relative;
   z-index: 1;
+  font-family: 'Roboto Mono', monospace;
 }
 
 /* Monday */
@@ -498,6 +510,7 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .nav-button.back {
@@ -599,6 +612,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-family: 'Roboto Mono', monospace;
 }
 
 /* Day-specific icons */
@@ -652,6 +666,7 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 500;
+  font-family: 'Roboto Mono', monospace;
 }
 
 /* Monday Styles */
@@ -781,6 +796,7 @@ body {
   font-weight: 600;
   color: #333;
   margin: 0;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .time-slots-grid {
@@ -799,6 +815,7 @@ body {
   border: 1px solid #e2e8f0;
   background: white;
   transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
 }
 
 /* Monday */

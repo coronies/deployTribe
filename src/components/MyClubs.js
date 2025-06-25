@@ -1,162 +1,179 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase/config';
-import { collection, query, where, getDocs, doc, getDoc, deleteDoc, updateDoc, arrayRemove } from 'firebase/firestore';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/MyClubs.css';
+import { FaChevronRight, FaUsers, FaFolderOpen, FaClock, FaStar } from 'react-icons/fa';
 
-function MyClubs() {
-  const { currentUser } = useAuth();
-  const [memberships, setMemberships] = useState([]);
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
+const MyClubs = () => {
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadUserClubs = async () => {
-      if (!currentUser) return;
-      
-      try {
-        // Get club memberships
-        const membershipQuery = query(
-          collection(db, 'memberships'),
-          where('userId', '==', currentUser.uid)
-        );
-        const membershipSnapshot = await getDocs(membershipQuery);
-        const membershipData = await Promise.all(
-          membershipSnapshot.docs.map(async (doc) => {
-            const membershipData = doc.data();
-            // Get club details
-            const clubDoc = await getDoc(doc(db, 'clubs', membershipData.clubId));
-            return {
-              id: doc.id,
-              ...membershipData,
-              club: clubDoc.data()
-            };
-          })
-        );
-        setMemberships(membershipData);
-
-        // Get applications
-        const applicationQuery = query(
-          collection(db, 'applications'),
-          where('userId', '==', currentUser.uid)
-        );
-        const applicationSnapshot = await getDocs(applicationQuery);
-        const applicationData = await Promise.all(
-          applicationSnapshot.docs.map(async (doc) => {
-            const applicationData = doc.data();
-            // Get club details
-            const clubDoc = await getDoc(doc(db, 'clubs', applicationData.clubId));
-            return {
-              id: doc.id,
-              ...applicationData,
-              club: clubDoc.data()
-            };
-          })
-        );
-        setApplications(applicationData);
-      } catch (error) {
-        console.error('Error loading clubs:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserClubs();
-  }, [currentUser]);
-
-  const handleWithdrawApplication = async (applicationId) => {
-    try {
-      // Delete the application document
-      await deleteDoc(doc(db, 'applications', applicationId));
-      
-      // Update the applications state
-      setApplications(applications.filter(app => app.id !== applicationId));
-      
-      // Update user's applications array
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, {
-        applications: arrayRemove(applicationId)
-      });
-    } catch (error) {
-      console.error('Error withdrawing application:', error);
-      alert('Failed to withdraw application. Please try again.');
-    }
+  const handleSeeMembers = (clubId) => {
+    navigate(`/club/${clubId}/members`);
   };
 
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
+  const handleInternalResources = (clubId) => {
+    navigate(`/club/${clubId}/resources`);
+  };
 
   return (
     <div className="my-clubs-container">
       <h1>My Clubs</h1>
 
-      <section className="memberships-section">
-        <h2>Club Memberships</h2>
-        {memberships.length > 0 ? (
-          <div className="clubs-grid">
-            {memberships.map(membership => (
-              <div key={membership.id} className="club-card">
-                <img 
-                  src={membership.club?.logoUrl || '/default-club-logo.png'} 
-                  alt={membership.club?.name} 
-                  className="club-logo"
-                />
-                <h3>{membership.club?.name}</h3>
-                <p className="membership-status">
-                  Member since {new Date(membership.joinDate).toLocaleDateString()}
-                </p>
-                <div className="club-actions">
-                  <button className="view-button">View Club</button>
-                  <button className="chat-button">Chat</button>
-                </div>
-              </div>
-            ))}
+      {/* Club Memberships Section */}
+      <section className="section-container memberships-section">
+        <h2 className="section-title">
+          <FaUsers />
+          Club Memberships
+        </h2>
+        <div className="clubs-grid">
+          <div className="club-card">
+            <img 
+              src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&auto=format&fit=crop&q=60" 
+              alt="Software Development Club" 
+              className="club-image" 
+            />
+            <span className="club-category">Technology</span>
+            <h3 className="club-name">Software Development Club</h3>
+            <div className="member-info">
+              <span>Member</span>
+            </div>
+            <div className="member-since">Member since 1/14/2024</div>
+            <div className="next-event">
+              <div className="event-title">Code Review Workshop</div>
+              <div className="event-date">3/19/2024</div>
+            </div>
+            <div className="club-actions">
+              <button className="view-button">View Club</button>
+              <button className="chat-button">Chat</button>
+              <button 
+                className="members-button"
+                onClick={() => handleSeeMembers('software-dev-club')}
+              >
+                <FaUsers /> See Members
+              </button>
+              <button 
+                className="resources-button"
+                onClick={() => handleInternalResources('software-dev-club')}
+              >
+                <FaFolderOpen /> Internal Resources
+              </button>
+            </div>
           </div>
-        ) : (
-          <p className="no-data">You haven't joined any clubs yet.</p>
-        )}
+
+          <div className="club-card">
+            <img 
+              src="https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?w=800&auto=format&fit=crop&q=60" 
+              alt="Data Science Society" 
+              className="club-image" 
+            />
+            <span className="club-category">Technology</span>
+            <h3 className="club-name">Data Science Society</h3>
+            <div className="member-info">
+              <span>Member</span>
+            </div>
+            <div className="member-since">Member since 1/31/2024</div>
+            <div className="next-event">
+              <div className="event-title">ML Workshop</div>
+              <div className="event-date">3/24/2024</div>
+            </div>
+            <div className="club-actions">
+              <button className="view-button">View Club</button>
+              <button className="chat-button">Chat</button>
+              <button 
+                className="members-button"
+                onClick={() => handleSeeMembers('data-science-society')}
+              >
+                <FaUsers /> See Members
+              </button>
+              <button 
+                className="resources-button"
+                onClick={() => handleInternalResources('data-science-society')}
+              >
+                <FaFolderOpen /> Internal Resources
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section className="applications-section">
-        <h2>Pending Applications</h2>
-        {applications.length > 0 ? (
-          <div className="applications-list">
-            {applications.map(application => (
-              <div key={application.id} className="application-card">
-                <div className="application-info">
-                  <h3>{application.club?.name}</h3>
-                  <p>Applied: {new Date(application.appliedDate).toLocaleDateString()}</p>
-                  <p>Status: <span className={`status ${application.status.toLowerCase()}`}>
-                    {application.status}
-                  </span></p>
-                </div>
-                <div className="application-actions">
-                  <button className="view-button">View Application</button>
-                  {application.status === 'PENDING' && (
-                    <button 
-                      className="withdraw-button"
-                      onClick={() => handleWithdrawApplication(application.id)}
-                    >
-                      Withdraw
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+      {/* Pending Applications Section */}
+      <section className="section-container applications-section">
+        <h2 className="section-title">
+          <FaClock />
+          Pending Applications
+        </h2>
+        <div className="application-card">
+          <div className="application-info">
+            <img 
+              src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&auto=format&fit=crop&q=60" 
+              alt="AI Research Club" 
+              className="club-image-small" 
+            />
+            <div className="application-details">
+              <h3>AI Research Club</h3>
+              <p>Applied: 2/29/2024</p>
+              <span className="status pending">PENDING</span>
+            </div>
           </div>
-        ) : (
-          <p className="no-data">No pending applications.</p>
-        )}
+          <div className="application-actions">
+            <button className="view-button">View Application</button>
+            <button className="withdraw-button">Withdraw</button>
+          </div>
+        </div>
       </section>
 
-      <section className="recommended-section">
-        <h2>Recommended for You</h2>
-        <p>Based on your interests and activity, you might like these clubs:</p>
-        {/* Add recommended clubs component here */}
+      {/* Recommended Clubs Section */}
+      <section className="section-container recommended-section">
+        <h2 className="section-title">
+          <FaStar />
+          Recommended for You
+        </h2>
+        <p className="section-description">Based on your interests and activity, you might like these clubs:</p>
+        <div className="recommended-grid">
+          <div className="recommended-card">
+            <img 
+              src="https://images.unsplash.com/photo-1556438064-2d7646166914?w=800&auto=format&fit=crop&q=60" 
+              alt="Game Development Club"
+              className="club-image"
+            />
+            <h3>Game Development Club</h3>
+            <p>Create amazing games and learn game development</p>
+            <span className="match-score">95% Match</span>
+            <button className="view-more">
+              View Club <FaChevronRight />
+            </button>
+          </div>
+
+          <div className="recommended-card">
+            <img 
+              src="https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=800&auto=format&fit=crop&q=60" 
+              alt="UX Design Club"
+              className="club-image"
+            />
+            <h3>UX Design Club</h3>
+            <p>Learn and practice user experience design</p>
+            <span className="match-score">88% Match</span>
+            <button className="view-more">
+              View Club <FaChevronRight />
+            </button>
+          </div>
+
+          <div className="recommended-card">
+            <img 
+              src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&auto=format&fit=crop&q=60" 
+              alt="Blockchain Society"
+              className="club-image"
+            />
+            <h3>Blockchain Society</h3>
+            <p>Explore blockchain technology and cryptocurrencies</p>
+            <span className="match-score">82% Match</span>
+            <button className="view-more">
+              View Club <FaChevronRight />
+            </button>
+          </div>
+        </div>
       </section>
     </div>
   );
-}
+};
 
 export default MyClubs; 

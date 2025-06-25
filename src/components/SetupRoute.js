@@ -3,18 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingScreen from './LoadingScreen';
 
-// Public routes that don't require authentication
-const PUBLIC_ROUTES = [
-  '/login',
-  '/register',
-  '/',
-  '/clubs',
-  '/events',
-  '/opportunities',
-  '/about',
-  '/how-it-works',
-  '/quiz'
-];
+
 
 // Routes that require authentication
 const PROTECTED_ROUTES = [

@@ -1,5 +1,5 @@
 .events-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -9,21 +9,22 @@
   font-weight: 700;
   color: #1a1a1a;
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .search-section {
-  margin-bottom: 2rem;
+  max-width: 600px;
+  margin: 0 auto 2rem;
 }
 
 .search-input {
   width: 100%;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background-color: #f3f4f6;
+  border-radius: 0.75rem;
+  background-color: #f9fafb;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .search-input:focus {
@@ -34,31 +35,69 @@
 
 .categories-section {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0 auto 2rem;
   flex-wrap: wrap;
+  padding: 0 1rem;
 }
 
 .category-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1.25rem;
   border: none;
-  border-radius: 0.5rem;
-  background: #fff;
+  border-radius: 0.75rem;
+  background: #f3f4f6;
   color: #4b5563;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .category-btn:hover {
-  background: #f3f4f6;
+  background: #e5e7eb;
+  transform: translateY(-1px);
 }
 
 .category-btn.active {
+  background: #4f46e5;
+  color: white;
+}
+
+.category-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Update the All button styling */
+.category-btn:first-child {
+  background: #18181b;
+  color: white;
+}
+
+.category-btn:first-child:hover {
+  background: #27272a;
+}
+
+.category-btn:first-child.active {
+  background: #4f46e5;
+}
+
+/* Style the Recommended button */
+.category-btn.recommendation-btn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.category-btn.recommendation-btn:hover {
+  background: #fde68a;
+}
+
+.category-btn.recommendation-btn.active {
   background: #4f46e5;
   color: white;
 }
@@ -220,6 +259,7 @@
 
 .register-btn,
 .attendance-btn,
+.calendar-btn,
 .details-btn {
   display: flex;
   align-items: center;
@@ -263,6 +303,15 @@
 
 .attendance-btn.attended:hover {
   background: #dc2626;
+}
+
+.calendar-btn {
+  background: #10b981;
+  color: white;
+}
+
+.calendar-btn:hover {
+  background: #059669;
 }
 
 .details-btn {
@@ -321,6 +370,7 @@
 
   .event-card-footer {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 
   .register-btn {

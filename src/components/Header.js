@@ -9,8 +9,46 @@ const Header = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
   const createMenuRef = useRef(null);
   const profileMenuRef = useRef(null);
+
+  // Load profile image from localStorage
+  useEffect(() => {
+    if (currentUser) {
+      const profileKey = `profile_image_${currentUser.uid}`;
+      const localProfileImage = localStorage.getItem(profileKey);
+      setProfileImage(localProfileImage || currentUser.photoURL || null);
+    } else {
+      setProfileImage(null);
+    }
+  }, [currentUser]);
+
+  // Listen for custom profile image update events (same page)
+  useEffect(() => {
+    const handleProfileImageUpdate = () => {
+      if (currentUser) {
+        const profileKey = `profile_image_${currentUser.uid}`;
+        const localProfileImage = localStorage.getItem(profileKey);
+        setProfileImage(localProfileImage || currentUser.photoURL || null);
+      }
+    };
+
+    window.addEventListener('profileImageUpdated', handleProfileImageUpdate);
+    return () => window.removeEventListener('profileImageUpdated', handleProfileImageUpdate);
+  }, [currentUser]);
+
+  // Listen for storage changes to update profile image across tabs
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (currentUser && e.key === `profile_image_${currentUser.uid}`) {
+        setProfileImage(e.newValue || currentUser.photoURL || null);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [currentUser]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -58,14 +96,14 @@ const Header = () => {
     <header className="header">
       <div className="header-content">
         <Link to="/" className="logo">
-          Tribe
+          <img src="/tribe-logo.svg" alt="Tribe" className="logo-image" />
+          <span className="logo-text">Tribe</span>
         </Link>
 
         <nav className="nav-links">
           <Link to="/clubs">Explore Clubs</Link>
           <Link to="/events">Events</Link>
           <Link to="/opportunities">Opportunities</Link>
-          <Link to="/quiz">Take Quiz</Link>
           
           <div className="create-menu-wrapper" ref={createMenuRef}>
             <button 
@@ -89,8 +127,8 @@ const Header = () => {
             )}
           </div>
 
-          <Link to="/about">About Us</Link>
-          <Link to="/how-it-works">How It Works</Link>
+          <Link to="/quiz">Take Quiz</Link>
+          <Link to="/why-tribe">Why Tribe</Link>
           {currentUser && <Link to="/student-dashboard">Dashboard</Link>}
         </nav>
 
@@ -101,9 +139,9 @@ const Header = () => {
                 className="profile-button"
                 onClick={() => setShowDropdown(!showDropdown)}
               >
-                {currentUser.photoURL ? (
+                {profileImage ? (
                   <img 
-                    src={currentUser.photoURL} 
+                    src={profileImage} 
                     alt="Profile" 
                     className="profile-image"
                     onError={(e) => {

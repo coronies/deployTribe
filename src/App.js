@@ -14,20 +14,21 @@ import Quiz from './components/Quiz';
 import Events from './components/Events';
 import EventDetails from './components/EventDetails';
 import Clubs from './components/Clubs';
-import About from './components/About';
-import HowItWorks from './components/HowItWorks';
+
 import MyClubs from './components/MyClubs';
 import MyEvents from './components/MyEvents';
 import ManageEvents from './components/ManageEvents';
 import LoadingScreen from './components/LoadingScreen';
-import ClubCard from './components/ClubCard';
 import FirebaseTest from './components/FirebaseTest';
 import TestClub from './components/TestClub';
 import SeedData from './components/SeedData';
 import AdminTools from './components/AdminTools';
 import Matching from './components/Matching';
 import ClubDetails from './components/ClubDetails';
+import ClubMembers from './components/ClubMembers';
+import ClubResources from './components/ClubResources';
 import Opportunities from './pages/Opportunities';
+import WhyTribe from './components/WhyTribe';
 import ManagementDashboard from './components/ManagementDashboard';
 import CreateOpportunity from './components/CreateOpportunity';
 import CreateEvent from './components/CreateEvent';
@@ -67,11 +68,12 @@ function App() {
               <Route path="/quiz" element={<SetupRoute><Quiz /></SetupRoute>} />
               <Route path="/clubs" element={<SetupRoute><Clubs /></SetupRoute>} />
               <Route path="/clubs/:clubId" element={<SetupRoute><ClubDetails /></SetupRoute>} />
+              <Route path="/club/:clubId/members" element={<SetupRoute><ClubMembers /></SetupRoute>} />
+              <Route path="/club/:clubId/resources" element={<SetupRoute><ClubResources /></SetupRoute>} />
               <Route path="/events" element={<SetupRoute><Events /></SetupRoute>} />
               <Route path="/events/:eventId" element={<SetupRoute><EventDetails /></SetupRoute>} />
               <Route path="/opportunities" element={<SetupRoute><Opportunities /></SetupRoute>} />
-              <Route path="/about" element={<SetupRoute><About /></SetupRoute>} />
-              <Route path="/how-it-works" element={<SetupRoute><HowItWorks /></SetupRoute>} />
+              <Route path="/why-tribe" element={<SetupRoute><WhyTribe /></SetupRoute>} />
               <Route path="/club-setup" element={<SetupRoute><ClubSetup /></SetupRoute>} />
               <Route path="/club-settings" element={<SetupRoute><ClubSetup isSettings={true} /></SetupRoute>} />
               <Route path="/student-dashboard" element={<SetupRoute><StudentDashboard /></SetupRoute>} />

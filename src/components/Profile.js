@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { storage, db, auth } from '../firebase/config';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, auth } from '../firebase/config';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { 
@@ -66,21 +65,36 @@ const Profile = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
 
   const loadProfileData = useCallback(async () => {
     if (!currentUser) return;
     
     try {
+      // Check localStorage for profile image first
+      const profileKey = `profile_image_${currentUser.uid}`;
+      const localProfileImage = localStorage.getItem(profileKey);
+      
       const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
       if (userDoc.exists()) {
         const data = userDoc.data();
         setProfileData(prev => ({
           ...prev,
           ...data,
+          // Prioritize localStorage image, then Firestore, then Auth
+          profileImage: localProfileImage || (data.profileImage && data.profileImage !== 'stored_locally' ? data.profileImage : null) || currentUser.photoURL || null,
           socialLinks: {
             ...prev.socialLinks,
             ...(data.socialLinks || {})
           }
+        }));
+      } else {
+        // If no Firestore document exists, use data from Firebase Auth or localStorage
+        setProfileData(prev => ({
+          ...prev,
+          fullName: currentUser.displayName || '',
+          profileImage: localProfileImage || currentUser.photoURL || null
         }));
       }
     } catch (error) {
@@ -106,93 +120,85 @@ const Profile = () => {
 
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        throw new Error('Please select an image file');
+        throw new Error('Please select an image file (JPEG, PNG, etc.)');
       }
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('Image size should be less than 5MB');
+      // Validate file size (max 1MB for better performance)
+      if (file.size > 1024 * 1024) {
+        throw new Error('Image size should be less than 1MB for demo purposes');
       }
 
-      // Create a unique filename with timestamp to prevent caching
-      const timestamp = Date.now();
-      const filename = `profile_${currentUser.uid}_${timestamp}`;
-      const storageRef = ref(storage, `profile_images/${currentUser.uid}/${filename}`);
-      
-      // Upload the file
-      await uploadBytes(storageRef, file);
-      
-      // Get the download URL
-      const downloadURL = await getDownloadURL(storageRef);
-      
-      // Update Auth profile
-      await updateProfile(auth.currentUser, {
-        photoURL: downloadURL
-      });
+      // Convert to base64 for local storage
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const base64URL = event.target.result;
+          
+          // Store in localStorage for immediate persistence
+          const profileKey = `profile_image_${currentUser.uid}`;
+          localStorage.setItem(profileKey, base64URL);
+          
+          // Update local state immediately for instant feedback
+          setProfileData(prev => ({
+            ...prev,
+            profileImage: base64URL
+          }));
 
-      // Update Firestore
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, {
-        profileImage: downloadURL,
-        lastUpdated: serverTimestamp()
-      });
+          // Store in Firestore (but don't rely on it for display)
+          const userRef = doc(db, 'users', currentUser.uid);
+          await updateDoc(userRef, {
+            profileImage: 'stored_locally', // Just a flag that image exists
+            lastUpdated: serverTimestamp()
+          });
+          
+          console.log('Profile image stored locally and flag saved to Firestore');
+          
+          // Dispatch custom event to update header profile image
+          window.dispatchEvent(new CustomEvent('profileImageUpdated'));
+          
+          setSuccess('Profile picture updated successfully!');
+        } catch (err) {
+          console.error('Error updating profile:', err);
+          setError(err.message || 'Failed to update profile picture. Please try again.');
+          
+          // Reset on error
+          setProfileData(prev => ({
+            ...prev,
+            profileImage: currentUser.photoURL || null
+          }));
+        } finally {
+          setUploadingImage(false);
+        }
+      };
 
-      // Update local state
-      setProfileData(prev => ({
-        ...prev,
-        profileImage: downloadURL
-      }));
+      reader.onerror = () => {
+        setError('Failed to read the image file. Please try again.');
+        setUploadingImage(false);
+      };
 
-      // Refresh user data in context
-      await refreshUserData(auth.currentUser);
-      setSuccess('Profile picture updated successfully!');
-
+      reader.readAsDataURL(file);
     } catch (err) {
       console.error('Error uploading image:', err);
-      setError(err.message || 'Failed to upload image');
-    } finally {
+      setError(err.message || 'Failed to upload image. Please try again.');
       setUploadingImage(false);
     }
   };
 
   const handleDeleteImage = async () => {
-    if (!currentUser?.uid || !profileData.profileImage) {
-      setError('You must be logged in to delete your profile image');
-      return;
-    }
-
     try {
       setError('');
       setSuccess('');
-      setUploadingImage(true);
 
-      // Delete the image from storage if it exists
-      if (profileData.profileImage && profileData.profileImage.includes('firebase')) {
-        try {
-          // Create a reference directly to the user's profile images folder
-          const imageFileName = profileData.profileImage.split('/').pop().split('?')[0];
-          const imageRef = ref(storage, `profile_images/${currentUser.uid}/${imageFileName}`);
-          await deleteObject(imageRef);
-        } catch (deleteError) {
-          console.warn('Could not delete image from storage:', deleteError);
-        }
-      }
+      // Remove from localStorage
+      const profileKey = `profile_image_${currentUser.uid}`;
+      localStorage.removeItem(profileKey);
 
-      // Update Firestore first
+      // Update Firestore
       const userRef = doc(db, 'users', currentUser.uid);
       await updateDoc(userRef, {
         profileImage: null,
         lastUpdated: serverTimestamp()
       });
-
-      // Then update Auth profile
-      try {
-        await updateProfile(auth.currentUser, {
-          photoURL: ''  // Use empty string instead of null
-        });
-      } catch (authError) {
-        console.warn('Could not update auth profile:', authError);
-      }
 
       // Update local state
       setProfileData(prev => ({
@@ -200,13 +206,13 @@ const Profile = () => {
         profileImage: null
       }));
 
+      // Dispatch custom event to update header profile image
+      window.dispatchEvent(new CustomEvent('profileImageUpdated'));
+      
       setSuccess('Profile picture removed successfully!');
-
     } catch (err) {
       console.error('Error deleting image:', err);
-      setError(err.message || 'Failed to delete image. Please try again.');
-    } finally {
-      setUploadingImage(false);
+      setError('Failed to delete image. Please try again.');
     }
   };
 
@@ -216,23 +222,49 @@ const Profile = () => {
     setSuccess('');
     
     try {
-      // Update Auth profile
+      // Prepare enhanced profile data for member cards
+      const enhancedProfileData = {
+        ...profileData,
+        // Ensure we have the localStorage profile image
+        profileImage: profileData.profileImage || localStorage.getItem(`profile_image_${currentUser.uid}`) || null,
+        // Add metadata for member display
+        email: currentUser.email,
+        uid: currentUser.uid,
+        displayName: profileData.fullName || currentUser.displayName,
+        // Add fields useful for member cards
+        isProfileComplete: !!(profileData.fullName && profileData.major && profileData.bio),
+        memberSince: profileData.memberSince || serverTimestamp(),
+        lastActive: serverTimestamp(),
+        // Social links count for member card display
+        socialLinksCount: Object.values(profileData.socialLinks).filter(link => link && link.trim()).length,
+        // Resume status
+        hasResume: !!(profileData.resume && profileData.resume.url)
+      };
+
+      // Update Auth profile with display name and photo URL
       await updateProfile(auth.currentUser, {
-        displayName: profileData.fullName
+        displayName: enhancedProfileData.fullName,
+        photoURL: enhancedProfileData.profileImage
       });
 
-      // Update Firestore
+      // Update Firestore with enhanced profile data
       const userRef = doc(db, 'users', currentUser.uid);
       await updateDoc(userRef, {
-        ...profileData,
+        ...enhancedProfileData,
         lastUpdated: serverTimestamp()
       });
+
+      // Update local state
+      setProfileData(prev => ({
+        ...prev,
+        ...enhancedProfileData
+      }));
 
       // Refresh user data
       await auth.currentUser.reload();
       await refreshUserData(auth.currentUser);
       
-      setSuccess('Profile updated successfully!');
+      setSuccess('Profile updated successfully! Your information is now available for club member displays.');
     } catch (error) {
       console.error('Error updating profile:', error);
       setError('Failed to update profile');
@@ -308,41 +340,49 @@ const Profile = () => {
         throw new Error('Resume size should be less than 10MB');
       }
 
-      // Create a unique filename
-      const timestamp = Date.now();
-      const filename = `resume_${currentUser.uid}_${timestamp}.pdf`;
-      const storageRef = ref(storage, `resumes/${currentUser.uid}/${filename}`);
-      
-      // Upload the file
-      await uploadBytes(storageRef, file);
-      
-      // Get the download URL
-      const downloadURL = await getDownloadURL(storageRef);
+      // Convert PDF to data URL for local storage
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const dataURL = event.target.result;
 
-      // Update Firestore
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, {
-        resume: {
-          url: downloadURL,
-          name: file.name,
-          uploadedAt: serverTimestamp()
+          // Update Firestore
+          const userRef = doc(db, 'users', currentUser.uid);
+          await updateDoc(userRef, {
+            resume: {
+              url: dataURL,
+              name: file.name,
+              uploadedAt: serverTimestamp()
+            }
+          });
+
+          // Update local state
+          setProfileData(prev => ({
+            ...prev,
+            resume: {
+              url: dataURL,
+              name: file.name
+            }
+          }));
+
+          setSuccess('Resume uploaded successfully!');
+        } catch (err) {
+          console.error('Error updating resume:', err);
+          setError(err.message || 'Failed to upload resume. Please try again.');
+        } finally {
+          setUploadingImage(false);
         }
-      });
+      };
 
-      // Update local state
-      setProfileData(prev => ({
-        ...prev,
-        resume: {
-          url: downloadURL,
-          name: file.name
-        }
-      }));
+      reader.onerror = () => {
+        setError('Failed to read the resume file.');
+        setUploadingImage(false);
+      };
 
-      setSuccess('Resume uploaded successfully!');
+      reader.readAsDataURL(file);
     } catch (err) {
       console.error('Error uploading resume:', err);
       setError(err.message || 'Failed to upload resume');
-    } finally {
       setUploadingImage(false);
     }
   };
@@ -354,17 +394,6 @@ const Profile = () => {
       setError('');
       setSuccess('');
       setUploadingImage(true);
-
-      // Delete the file from storage
-      if (profileData.resume.url.includes('firebase')) {
-        try {
-          const resumeFileName = profileData.resume.url.split('/').pop().split('?')[0];
-          const resumeRef = ref(storage, `resumes/${currentUser.uid}/${resumeFileName}`);
-          await deleteObject(resumeRef);
-        } catch (deleteError) {
-          console.warn('Could not delete resume from storage:', deleteError);
-        }
-      }
 
       // Update Firestore
       const userRef = doc(db, 'users', currentUser.uid);
@@ -387,6 +416,93 @@ const Profile = () => {
     }
   };
 
+  // Auto-save functionality
+  const autoSaveProfile = useCallback(async (data) => {
+    if (!currentUser || isAutoSaving) return;
+    
+    try {
+      setIsAutoSaving(true);
+      
+      // Prepare enhanced profile data for auto-save
+      const enhancedProfileData = {
+        ...data,
+        profileImage: data.profileImage || localStorage.getItem(`profile_image_${currentUser.uid}`) || null,
+        email: currentUser.email,
+        uid: currentUser.uid,
+        displayName: data.fullName || currentUser.displayName,
+        isProfileComplete: !!(data.fullName && data.major && data.bio),
+        memberSince: data.memberSince || serverTimestamp(),
+        lastActive: serverTimestamp(),
+        socialLinksCount: Object.values(data.socialLinks).filter(link => link && link.trim()).length,
+        hasResume: !!(data.resume && data.resume.url)
+      };
+
+      // Update Firestore with enhanced profile data
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        ...enhancedProfileData,
+        lastUpdated: serverTimestamp()
+      });
+
+      setHasUnsavedChanges(false);
+      console.log('Profile auto-saved successfully');
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    } finally {
+      setIsAutoSaving(false);
+    }
+  }, [currentUser, isAutoSaving]);
+
+  // Debounced auto-save (save 2 seconds after user stops typing)
+  useEffect(() => {
+    if (!hasUnsavedChanges || !currentUser) return;
+    
+    const timeoutId = setTimeout(() => {
+      autoSaveProfile(profileData);
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [profileData, hasUnsavedChanges, autoSaveProfile, currentUser]);
+
+  // Save before leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = async (e) => {
+      if (hasUnsavedChanges && currentUser) {
+        // Try to save immediately
+        await autoSaveProfile(profileData);
+        
+        // Show browser warning
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && hasUnsavedChanges && currentUser) {
+        // Save when tab becomes hidden
+        autoSaveProfile(profileData);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [hasUnsavedChanges, profileData, autoSaveProfile, currentUser]);
+
+  // Updated setProfileData to track changes
+  const updateProfileData = useCallback((updater) => {
+    setProfileData(prev => {
+      const newData = typeof updater === 'function' ? updater(prev) : updater;
+      setHasUnsavedChanges(true);
+      return newData;
+    });
+  }, []);
+
   if (loading) {
     return (
       <div className="loading">
@@ -405,17 +521,12 @@ const Profile = () => {
                 src={profileData.profileImage}
                 alt={profileData.fullName || 'Profile'} 
                 className="profile-image"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/default-avatar.png';
-                }}
               />
               <button 
                 onClick={handleDeleteImage} 
                 className="delete-image-button"
                 disabled={uploadingImage}
                 title="Remove photo"
-                aria-label="Remove profile photo"
               >
                 <FaTrash />
               </button>
@@ -437,7 +548,6 @@ const Profile = () => {
             <label 
               htmlFor="image-upload" 
               className={`image-upload-label ${uploadingImage ? 'uploading' : ''}`}
-              aria-label={uploadingImage ? 'Uploading...' : 'Change profile photo'}
             >
               {uploadingImage ? (
                 <>
@@ -558,6 +668,20 @@ const Profile = () => {
         </div>
       )}
 
+      {/* Auto-save indicator */}
+      {isAutoSaving && (
+        <div className="autosave-indicator">
+          <div className="spinner"></div>
+          <span>Auto-saving...</span>
+        </div>
+      )}
+
+      {hasUnsavedChanges && !isAutoSaving && (
+        <div className="unsaved-changes-indicator">
+          <span>⚠️ You have unsaved changes. They will be saved automatically.</span>
+        </div>
+      )}
+
       <form onSubmit={handleProfileUpdate} className="profile-form">
         <div className="form-group">
           <label htmlFor="fullName">Full Name</label>
@@ -565,7 +689,7 @@ const Profile = () => {
             type="text"
             id="fullName"
             value={profileData.fullName}
-            onChange={(e) => setProfileData(prev => ({ ...prev, fullName: e.target.value }))}
+            onChange={(e) => updateProfileData(prev => ({ ...prev, fullName: e.target.value }))}
             placeholder="Enter your full name"
           />
         </div>
@@ -575,7 +699,7 @@ const Profile = () => {
           <textarea
             id="bio"
             value={profileData.bio}
-            onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+            onChange={(e) => updateProfileData(prev => ({ ...prev, bio: e.target.value }))}
             placeholder="Tell us about yourself"
             rows="3"
           />
@@ -588,7 +712,7 @@ const Profile = () => {
               type="text"
               id="major"
               value={profileData.major}
-              onChange={(e) => setProfileData(prev => ({ ...prev, major: e.target.value }))}
+              onChange={(e) => updateProfileData(prev => ({ ...prev, major: e.target.value }))}
               placeholder="Your major"
             />
           </div>
@@ -599,7 +723,7 @@ const Profile = () => {
               type="number"
               id="graduationYear"
               value={profileData.graduationYear}
-              onChange={(e) => setProfileData(prev => ({ ...prev, graduationYear: e.target.value }))}
+              onChange={(e) => updateProfileData(prev => ({ ...prev, graduationYear: e.target.value }))}
               placeholder="2024"
               min="2020"
               max="2030"
@@ -620,7 +744,7 @@ const Profile = () => {
                 <input
                   type="url"
                   value={url}
-                  onChange={(e) => setProfileData(prev => ({ 
+                  onChange={(e) => updateProfileData(prev => ({ 
                     ...prev, 
                     socialLinks: { ...prev.socialLinks, [platform]: e.target.value }
                   }))}
@@ -631,8 +755,17 @@ const Profile = () => {
           </div>
         </div>
 
-        <button type="submit" className="submit-button">
-          Save Profile
+        <button type="submit" className="submit-button" disabled={isAutoSaving}>
+          {isAutoSaving ? (
+            <>
+              <div className="spinner"></div>
+              Auto-saving...
+            </>
+          ) : hasUnsavedChanges ? (
+            'Save Profile Now'
+          ) : (
+            '✓ Profile Saved'
+          )}
         </button>
       </form>
     </div>

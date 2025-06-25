@@ -1,6 +1,7 @@
 .tag-selector {
   position: relative;
   width: 100%;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .tag-selector-layout {
@@ -57,10 +58,12 @@
   font-size: 0.875rem;
   color: white;
   background: var(--text-secondary);
+  font-family: 'Roboto Mono', monospace;
 }
 
 .placeholder {
   color: var(--text-secondary);
+  font-family: 'Roboto Mono', monospace;
 }
 
 .dropdown-icon {
@@ -107,6 +110,7 @@
   align-items: center;
   justify-content: space-between;
   transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .tag-option:hover:not(:disabled) {
@@ -195,11 +199,13 @@
   font-size: 1.25rem;
   color: var(--text-primary);
   margin: 0;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .tag-count {
   font-size: 0.875rem;
   color: var(--text-secondary);
+  font-family: 'Roboto Mono', monospace;
 }
 
 /* Category-specific colors */

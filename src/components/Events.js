@@ -4,8 +4,9 @@ import { db } from '../firebase/config';
 import { doc, updateDoc, arrayUnion, getDoc, collection, getDocs, setDoc, query, orderBy } from 'firebase/firestore';
 import '../styles/Events.css';
 import { Link } from 'react-router-dom';
-import { FaChevronDown } from 'react-icons/fa';
-import { seedAllData } from '../utils/seedData';
+import { FaChevronDown, FaCalendarPlus } from 'react-icons/fa';
+// Removed unused seedAllData import
+import { addToGoogleCalendar } from '../utils/calendarUtils';
 
 // Import categories from Quiz component
 const CATEGORIES = {
@@ -318,6 +319,14 @@ const EventCard = ({ event, variant }) => {
           <span className="btn-icon">{hasAttended ? '✅' : '🎟️'}</span>
           {hasAttended ? 'Unattend' : 'I am Attending'}
         </button>
+        <button 
+          className="calendar-btn"
+          onClick={() => addToGoogleCalendar(event, 'event')}
+          title="Add to Google Calendar"
+        >
+          <FaCalendarPlus className="btn-icon" />
+          Add to Calendar
+        </button>
         <Link to={`/events/${event.id}`} className="details-btn">
           <span className="btn-icon">📖</span>
           Learn More
@@ -327,15 +336,14 @@ const EventCard = ({ event, variant }) => {
   );
 };
 
-function Events() {
+const Events = () => {
   const { currentUser } = useAuth();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubcategories, setSelectedSubcategories] = useState([]);
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [showRecommended, setShowRecommended] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -364,10 +372,9 @@ function Events() {
   }, []);
 
   const handleCategorySelect = (category, subcategory = null) => {
-    if (category === 'All') {
-      setSelectedCategory('All');
+    if (category === null) {
+      setSelectedCategory(null);
       setSelectedSubcategories([]);
-      setActiveDropdown(null);
       return;
     }
 
@@ -381,29 +388,24 @@ function Events() {
     }
 
     setSelectedCategory(category);
-    if (!subcategory) {
-      setActiveDropdown(activeDropdown === category ? null : category);
-    }
   };
 
   // Filter events based on search query, category, subcategories, and recommendations
   const filteredEvents = events.filter(event => {
-    const titleMatch = event.title?.toLowerCase().includes(searchQuery.toLowerCase());
-    const descriptionMatch = event.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const tagMatch = event.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    const titleMatch = event.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    const descriptionMatch = event.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const tagMatch = event.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const searchMatches = titleMatch || descriptionMatch || tagMatch;
 
     let categoryMatches = true;
-    if (selectedCategory !== 'All') {
-      if (selectedSubcategories.length > 0) {
-        categoryMatches = event.tags?.some(tag => selectedSubcategories.includes(tag));
-      } else {
-        categoryMatches = event.tags?.some(tag => CATEGORIES[selectedCategory].subtags.includes(tag));
-      }
+    if (selectedCategory && selectedSubcategories.length > 0) {
+      categoryMatches = event.tags?.some(tag => selectedSubcategories.includes(tag));
+    } else if (selectedCategory) {
+      categoryMatches = event.tags?.some(tag => CATEGORIES[selectedCategory].subtags.includes(tag));
     }
 
     let recommendationMatches = true;
-    if (showRecommended && currentUser) {
+    if (showRecommendations && currentUser) {
       // Add recommendation logic here based on user preferences
       // For now, we'll just show events that match user's interests
       const userInterests = currentUser.interests || [];
@@ -420,67 +422,40 @@ function Events() {
       <div className="search-section">
         <input
           type="text"
-          placeholder="Search events by name, description, or tags..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
           className="search-input"
+          placeholder="Search events by name, description, or tags..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <div className="filter-section">
-        <div className="filter-categories">
+      <div className="categories-section">
+        <button 
+          className={`category-btn ${!selectedCategory ? 'active' : ''}`}
+          onClick={() => handleCategorySelect(null)}
+        >
+          All
+        </button>
+        
+        {currentUser && (
           <button 
-            className={`category-main all-button ${selectedCategory === 'All' ? 'active' : ''}`}
-            onClick={() => handleCategorySelect('All')}
+            className={`category-btn recommendation-btn ${showRecommendations ? 'active' : ''}`}
+            onClick={() => setShowRecommendations(!showRecommendations)}
           >
-            All
+            ⭐ Recommended
           </button>
+        )}
 
+        {Object.entries(CATEGORIES).map(([category, data]) => (
           <button
-            className={`category-main recommendation-button ${showRecommended ? 'active' : ''}`}
-            onClick={() => setShowRecommended(!showRecommended)}
+            key={category}
+            className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
+            onClick={() => handleCategorySelect(category)}
           >
-            🎯 Recommended
+            {data.label}
+            {data.subtags && <FaChevronDown className={`dropdown-arrow ${selectedCategory === category ? 'active' : ''}`} />}
           </button>
-
-          {Object.entries(CATEGORIES).map(([category, { label, subtags }]) => (
-            <div key={category} className="category-group">
-              <button 
-                className={`category-main ${activeDropdown === category ? 'active' : ''} ${
-                  selectedSubcategories.some(sub => subtags.includes(sub)) ? 'has-selected' : ''
-                }`}
-                onClick={() => handleCategorySelect(category)}
-              >
-                {label}
-                <FaChevronDown 
-                  className={`dropdown-icon ${activeDropdown === category ? 'active' : ''}`}
-                />
-              </button>
-              
-              {activeDropdown === category && (
-                <div className="dropdown-content active">
-                  <div className="subcategories-grid">
-                    {subtags.map(subcategory => (
-                      <button
-                        key={subcategory}
-                        className={`subcategory ${selectedSubcategories.includes(subcategory) ? 'active' : ''}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCategorySelect(category, subcategory);
-                        }}
-                      >
-                        {subcategory}
-                        {selectedSubcategories.includes(subcategory) && (
-                          <span className="check-icon">✓</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
 
       <div className="events-grid">
@@ -497,6 +472,6 @@ function Events() {
       )}
     </div>
   );
-}
+};
 
 export default Events; 

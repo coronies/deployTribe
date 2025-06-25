@@ -1,0 +1,232 @@
+.why-tribe-container {
+  font-family: 'Roboto Mono', monospace;
+  min-height: 100vh;
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%);
+  padding: 2rem 0;
+}
+
+.why-tribe-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.hero-section {
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.hero-section h1 {
+  font-size: 3.5rem;
+  background: linear-gradient(45deg, #4361EE, #3B82F6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+.hero-subtitle {
+  font-size: 1.3rem;
+  color: #666;
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.problems-solutions {
+  margin: 6rem 0 8rem 0;
+}
+
+.problem-section, .solution-section {
+  margin-bottom: 4rem;
+}
+
+.problem-section h2, .solution-section h2 {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #333;
+}
+
+.problems-grid, .solutions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.problem-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.problem-card:hover {
+  transform: translateY(-5px);
+}
+
+.problem-icon {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  color: #4361EE;
+}
+
+.problem-card h3 {
+  font-size: 1.5rem;
+  color: #4361EE;
+  margin-bottom: 1rem;
+}
+
+.problem-card p {
+  color: #666;
+  line-height: 1.6;
+}
+
+.solution-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.solution-card:hover {
+  transform: translateY(-5px);
+  border-color: #4361EE;
+}
+
+.solution-icon {
+  font-size: 3rem;
+  color: #4361EE;
+  margin-bottom: 1.5rem;
+}
+
+.solution-card h3 {
+  font-size: 1.5rem;
+  color: #4361EE;
+  margin-bottom: 1rem;
+}
+
+.solution-card p {
+  color: #666;
+  line-height: 1.6;
+}
+
+.benefits-section {
+  background: white;
+  padding: 4rem;
+  border-radius: 30px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  margin: 4rem 0;
+}
+
+.benefits-section h2 {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #333;
+}
+
+.benefits-list {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 15px;
+  transition: all 0.3s ease;
+}
+
+.benefit-item:hover {
+  background: rgba(67, 97, 238, 0.1);
+  transform: translateX(10px);
+}
+
+.check-icon {
+  color: #27ae60;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.benefit-item span {
+  color: #333;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.cta-section {
+  text-align: center;
+  padding: 4rem 0;
+  background: linear-gradient(45deg, #4361EE, #3B82F6);
+  border-radius: 30px;
+  color: white;
+  margin: 4rem 0;
+}
+
+.cta-section h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.cta-section p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .why-tribe-content {
+    padding: 0 1rem;
+  }
+
+  .hero-section {
+    padding: 2rem 0;
+  }
+
+  .hero-section h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .problems-grid, .solutions-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .problem-card, .solution-card {
+    padding: 2rem;
+  }
+
+  .benefits-section {
+    padding: 2rem;
+    border-radius: 20px;
+  }
+
+  .benefit-item {
+    padding: 0.8rem;
+  }
+
+  .cta-section {
+    padding: 3rem 1rem;
+    border-radius: 20px;
+  }
+
+  .cta-section h2 {
+    font-size: 2rem;
+  }
+} 

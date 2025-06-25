@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { fetchOpportunities, searchOpportunities } from '../services/opportunityService';
 import { getPersonalizedRecommendations } from '../utils/recommendations';
 import { useAuth } from '../contexts/AuthContext';
-import { FiSearch, FiFilter, FiX, FiStar } from 'react-icons/fi';
+import { FiSearch, FiX, FiStar } from 'react-icons/fi';
+import { FaCalendarPlus } from 'react-icons/fa';
+import { addToGoogleCalendar } from '../utils/calendarUtils';
 import '../styles/Opportunities.css';
 
 // Import categories from Quiz component
@@ -87,10 +89,9 @@ const Opportunities = () => {
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubtags, setSelectedSubtags] = useState([]);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showTagsDropdown, setShowTagsDropdown] = useState(false);
 
-  const loadOpportunities = async () => {
+  const loadOpportunities = useCallback(async () => {
     try {
       setLoading(true);
       let data;
@@ -132,7 +133,7 @@ const Opportunities = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, showRecommendations, selectedCategory, selectedSubtags, currentUser]);
 
   const handleSearch = async () => {
     try {
@@ -150,7 +151,7 @@ const Opportunities = () => {
 
   useEffect(() => {
     loadOpportunities();
-  }, [filters, showRecommendations, selectedCategory, selectedSubtags]);
+  }, [loadOpportunities]);
 
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
@@ -175,7 +176,6 @@ const Opportunities = () => {
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
-    setShowCategoryDropdown(false);
   };
 
   const handleTagSelect = (tag) => {
@@ -187,17 +187,7 @@ const Opportunities = () => {
     });
   };
 
-  const clearFilters = () => {
-    setFilters({
-      type: 'All',
-      compensation: 'All',
-      category: 'All',
-      subcategory: 'All'
-    });
-    setSelectedCategory(null);
-    setSelectedSubtags([]);
-    setShowRecommendations(false);
-  };
+  // Removed unused clearFilters function
 
   return (
     <div className="opportunities-container">
@@ -230,15 +220,6 @@ const Opportunities = () => {
               </div>
             </form>
           </div>
-          {currentUser && (
-            <button 
-              className={`recommendation-button ${showRecommendations ? 'active' : ''}`}
-              onClick={() => setShowRecommendations(!showRecommendations)}
-            >
-              <FiStar />
-              {showRecommendations ? 'Show All' : 'Show Recommended'}
-            </button>
-          )}
         </div>
       </div>
 
@@ -263,6 +244,15 @@ const Opportunities = () => {
                 {label}
               </button>
             ))}
+            {currentUser && (
+              <button 
+                className={`category-btn recommendation-btn ${showRecommendations ? 'active' : ''}`}
+                onClick={() => setShowRecommendations(!showRecommendations)}
+              >
+                <FiStar />
+                {showRecommendations ? 'Show All' : 'Show Recommended'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -375,14 +365,24 @@ const Opportunities = () => {
               <div className="deadline">
                 Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
               </div>
-              <a 
-                href={opportunity.applicationLink} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="apply-button"
-              >
-                Apply Now
-              </a>
+              <div className="opportunity-actions">
+                <a 
+                  href={opportunity.applicationLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="apply-button"
+                >
+                  Apply Now
+                </a>
+                <button 
+                  className="calendar-button"
+                  onClick={() => addToGoogleCalendar(opportunity, 'opportunity')}
+                  title="Add deadline reminder to Google Calendar"
+                >
+                  <FaCalendarPlus className="calendar-icon" />
+                  Add to Calendar
+                </button>
+              </div>
             </div>
           ))}
         </div>
