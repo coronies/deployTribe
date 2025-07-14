@@ -104,6 +104,7 @@ const Header = () => {
           <Link to="/clubs">Explore Clubs</Link>
           <Link to="/events">Events</Link>
           <Link to="/opportunities">Opportunities</Link>
+          <Link to="/assistant">Personal Assistant</Link>
           
           <div className="create-menu-wrapper" ref={createMenuRef}>
             <button 

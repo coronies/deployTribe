@@ -1,0 +1,113 @@
+Overview
+User prompt endpoint gets sent to the backend (FastAPI).
+Throttle request rate based on userID (SlowAPI has built-in functionality for this)
+Backend calls OpenAI API to convert prompt into vector query.
+In PineconeDB: Top K closest vector embeddings are identified using euclidean distance calculations. (via LlamaIndex)
+These embeddings get sent to OpenAI API to augment the prompt to LLM.
+Response is sent back to the user with sources.
+Post-RAG
+LlamaIndex reads pdfs and urls using SimpleDirectoryReader and SimpleWebPageReader (we can replace this with something like Playwright for a more thorough web scraper).
+Text is chunked, vectorized, and then embedded into PineconeDB which is later used in the RAG flow.
+Individual elements updated based on header data (checked each day).
+System Blueprint: Real-Time RAG Query Flow
+Phase 1: The Search (Finding the Ingredients)
+Step 1: User Action (The Trigger)
+Component: Frontend App
+Action: The user types a question into the chatbot UI and hits "Send".
+Data: Raw text string (e.g., "When is the FAFSA deadline?").
+Step 2: API Request
+Component: Frontend App
+Action: Makes an asynchronous POST request to your backend service.
+Data: A JSON payload sent to the /api/v1/query endpoint.
+JSON
+{ "text": "When is the FAFSA deadline?" }
+
+
+Step 3: Embed the Query
+Component: Your FastAPI Backend (Orchestrated by LlamaIndex)
+Action: Receives the request. Its first job is to understand the meaning of the user's question. It calls the OpenAI API.
+Data Sent to OpenAI: The raw text string.
+Data Received from OpenAI: A query vector (e.g., a list of 1536 numbers).
+Step 4: Retrieve Relevant Context
+Component: Your FastAPI Backend (Orchestrated by LlamaIndex)
+Action: It takes the query vector and uses it to search your vector database.
+Data Sent to Pinecone: The query vector.
+Data Received from Pinecone: The top-k (e.g., top 3) most similar records, which include the original human-readable text chunks and their metadata (like the source filename).
+Phase 2: The Augmentation (Preparing the Briefing)
+Step 5: Construct the Augmented Prompt
+Component: Your FastAPI Backend (Orchestrated by LlamaIndex)
+Action: This is the core of "prompt engineering." LlamaIndex programmatically builds a new, much larger prompt using the template we designed.
+Data: It combines three pieces of information:
+The Retrieved Context: The text chunks from Pinecone.
+The User's Original Question: "When is the FAFSA deadline?"
+The System Instructions: "You are a helpful assistant... Answer ONLY based on the context... Cite your sources..."
+Phase 3: The Generation (Synthesizing the Answer)
+Step 6: Query the Generative LLM
+Component: Your FastAPI Backend (Orchestrated by LlamaIndex)
+Action: It sends the final, complete, augmented prompt to the generative LLM (e.g., GPT-4).
+Data Sent to OpenAI: The large, detailed prompt from Step 5.
+Step 7: Receive the Synthesized Answer
+Component: Your FastAPI Backend (Orchestrated by LlamaIndex)
+Action: It receives the final response from the LLM.
+Data Received from OpenAI: The generated, human-readable text answer.
+Phase 4: The Response (Delivering the Final Product)
+Step 8: Format the API Response
+Component: Your FastAPI Backend
+Action: It structures the LLM's answer and the source information into a clean JSON object.
+Data:
+JSON
+{
+  "answer": "The priority deadline is March 15th...",
+  "sources": [{"file_name": "financial_aid.pdf", ...}]
+}
+
+
+Step 9: Send Response to Frontend
+Component: Your FastAPI Backend
+Action: Sends the final JSON payload back to the user's app as the response to the initial API request from Step 2.
+Step 10: Display to User
+Component: Frontend App
+Action: Parses the JSON response and displays the answer and sources in the chatbot UI for the user to read. The flow is complete.
+System Blueprint: RAG Ingestion & Maintenance Flow
+Part 1: The Initial Bulk Load (The "Day One" Process)
+This is a one-time script (initial_load.py) that takes your curated sources and populates your empty Pinecone database.
+Step 1: Curate Authoritative Sources
+Component: Your Team (Manual Process)
+Action: Create a definitive list of high-trust URLs (e.g., registrar.utexas.edu/calendars, finaid.utexas.edu/deadlines) and download key, relatively static documents (e.g., student_handbook_2025.pdf).
+Data: A folder ./ut_data/ containing the PDFs and a list/JSON file of the URLs.
+Step 2: Load Documents into Memory
+Component: Ingestion Script (using LlamaIndex)
+Action: Use SimpleDirectoryReader to load local PDFs and SimpleWebPageReader (or a more advanced headless browser script using Playwright) to load the text from the curated URLs.
+Data: A combined list of Document objects in your Python script's memory.
+Step 3: Chunk Documents
+Component: Ingestion Script (LlamaIndex SentenceSplitter)
+Action: Iterate through each Document object and split its text content into smaller, semantically meaningful chunks (e.g., 256 tokens per chunk with an overlap of 32 tokens).
+Data: A list of hundreds or thousands of small text chunks.
+Step 4: Generate & Store Embeddings
+Component: Ingestion Script (LlamaIndex orchestrating OpenAI & Pinecone)
+Action: This is the core loop. For each text chunk: a. Make an API call to the OpenAI Embedding API to convert the chunk into a vector. b. Generate a unique ID for this chunk. A good practice is to create a hash of the document source (URL/filename) plus the chunk content itself. chunk_id = hash(source + chunk_text). c. "Upsert" the data into Pinecone. "Upsert" means "update if this ID exists, insert if it doesn't." For the initial load, every operation will be an insert.
+Data Sent to Pinecone (per chunk):
+id: The unique chunk_id.
+values: The embedding vector (e.g., a list of 1536 numbers).
+metadata: A JSON object containing the original text and the source. e.g., {'text': 'The priority deadline for...', 'source': 'finaid.utexas.edu/deadlines'}.
+Step 5: Finalize
+Component: Ingestion Script
+Action: The script finishes. Your Pinecone index is now fully populated and ready to be queried by your FastAPI service.
+Part 2: Automated Updating (The "Keeping it Fresh" Process)
+University websites change. An out-of-date knowledge base is a liability. You need an automated way to keep it current. This is a more advanced process that you'd implement after your MVP is working.
+Step 1: The "Change Detection" Scraper
+Component: A new, scheduled script (update_checker.py).
+Action: This script runs automatically on a schedule (e.g., once a day). Its only job is to check if your source documents have changed.
+For each URL, it can make an HTTP HEAD request to check the Last-Modified header.
+Alternatively, it can download the page, compute a hash (like SHA-256) of the content, and compare it to the hash from the last time it checked.
+Data: The script generates a list of URLs that have been modified since the last check.
+Step 2: The Incremental Ingestion Trigger
+Component: Scheduling Service (e.g., cron, GitHub Actions, or AWS Lambda with an EventBridge Scheduler).
+Action: If the update_checker.py script finds changed URLs, it triggers the main ingestion script (ingest.py). However, it passes the list of only the changed URLs as an argument.
+Step 3: The Smart Ingestion Script (Updated ingest.py)
+Component: Your modified ingestion script.
+Action: a. It now accepts a list of URLs to process. If no list is provided, it processes everything (for a bulk load). If a list is provided, it only loads, chunks, and embeds the content from those specific URLs. b. As it generates new chunks and chunk_ids from a changed document, it "Upserts" them to Pinecone. c. Because the chunk_id is based on the content, if a paragraph of text hasn't changed, its hash/ID will be the same, and the upsert operation will simply overwrite it with identical data (a cheap operation). If a paragraph is new, it will be inserted.
+Step 4: Handling Deletions (Stale Content Removal)
+Component: Your smart ingestion script.
+Action: This is the most complex part. After upserting the new content for a changed URL (e.g., finaid.utexas.edu), you need to delete the old, stale chunks. a. Keep track of all the chunk_ids that existed for that URL before the update. b. Keep track of all the new chunk_ids you just generated. c. Calculate the difference: any ID in the "before" set but not in the "new" set is stale and must be deleted. d. Make a delete API call to Pinecone with the list of stale IDs.
+

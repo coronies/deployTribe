@@ -1,0 +1,8 @@
+.dockerignore
+.env
+.git
+.gitignore
+.pytest_cache
+.venv
+frontend/node_modules
+__pycache__

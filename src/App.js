@@ -34,6 +34,7 @@ import CreateOpportunity from './components/CreateOpportunity';
 import CreateEvent from './components/CreateEvent';
 import SetupRoute from './components/SetupRoute';
 import AccountSettings from './components/AccountSettings';
+import PersonalAssistant from './components/PersonalAssistant';
 import './App.css';
 
 function App() {
@@ -93,6 +94,7 @@ function App() {
               <Route path="/manage" element={<SetupRoute><ManagementDashboard /></SetupRoute>} />
               <Route path="/manage/opportunities/create" element={<SetupRoute><CreateOpportunity /></SetupRoute>} />
               <Route path="/manage/events/create" element={<SetupRoute><CreateEvent /></SetupRoute>} />
+              <Route path="/assistant" element={<SetupRoute><PersonalAssistant /></SetupRoute>} />
             </Routes>
           </div>
         </Router>
