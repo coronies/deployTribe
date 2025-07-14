@@ -129,10 +129,13 @@ async def handle_assistant_query(request: Request, query_request: AssistantQuery
         source_nodes = response.source_nodes
         
         sources = []
+        seen_urls = set()
         if source_nodes:
             for node in source_nodes:
                 source_url = node.metadata.get('source_url')
-                sources.append(Source(source_url=source_url))
+                if source_url and source_url not in seen_urls:
+                    sources.append(Source(source_url=source_url))
+                    seen_urls.add(source_url)
 
         return AssistantQueryResponse(answer_text=answer, sources=sources)
 
