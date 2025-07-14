@@ -6,6 +6,7 @@ const PersonalAssistant = () => {
     const [query, setQuery] = useState('');
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [openSourcesIndex, setOpenSourcesIndex] = useState(null);
 
     const handleQueryChange = (e) => {
         setQuery(e.target.value);
@@ -45,20 +46,38 @@ const PersonalAssistant = () => {
         }
     };
 
+    const handleToggleSources = (index) => {
+        setOpenSourcesIndex(openSourcesIndex === index ? null : index);
+    };
+
     return (
         <div className="personal-assistant-container">
             <div className="chat-window">
                 {messages.map((msg, index) => (
                     <div key={index} className={`message ${msg.sender}`}>
                         <p>{msg.text}</p>
-                        {msg.sources && (
-                            <div className="sources">
-                                <strong>Sources:</strong>
-                                <ul>
-                                    {msg.sources.map((source, i) => (
-                                        <li key={i}><a href={source.source_url} target="_blank" rel="noopener noreferrer">{source.source_url}</a></li>
-                                    ))}
-                                </ul>
+                        {msg.sender === 'assistant' && msg.sources && msg.sources.length > 0 && (
+                            <div className="sources-tab">
+                                <button
+                                    className="sources-toggle-btn"
+                                    onClick={() => handleToggleSources(index)}
+                                >
+                                    {openSourcesIndex === index ? 'Hide Sources' : 'Show Sources'}
+                                </button>
+                                {openSourcesIndex === index && (
+                                    <div className="sources-list">
+                                        <strong>Sources:</strong>
+                                        <ul>
+                                            {msg.sources.map((source, i) => (
+                                                <li key={i}>
+                                                    <a href={source.source_url} target="_blank" rel="noopener noreferrer">
+                                                        {source.source_url}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

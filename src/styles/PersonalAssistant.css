@@ -79,3 +79,57 @@
     background-color: #a0cfff;
     cursor: not-allowed;
 }
+
+/* Sources tab/button styles */
+.sources-tab {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.sources-toggle-btn {
+    background: #f5f7fa;
+    color: #007bff;
+    border: 1px solid #e0e7ef;
+    border-radius: 16px;
+    padding: 4px 14px;
+    font-size: 0.95em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    margin-bottom: 4px;
+    outline: none;
+}
+.sources-toggle-btn:hover, .sources-toggle-btn:focus {
+    background: #e6f0ff;
+    color: #0056b3;
+    border: 1px solid #b3d1ff;
+}
+
+.sources-list {
+    background: #f9f9fb;
+    border: 1px solid #e0e7ef;
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-top: 2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    font-size: 0.95em;
+    max-width: 350px;
+}
+
+.sources-list ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.sources-list a {
+    color: #007bff;
+    text-decoration: underline;
+    word-break: break-all;
+}
+
+.sources-list a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}

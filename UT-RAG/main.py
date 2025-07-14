@@ -70,7 +70,7 @@ qa_prompt_tmpl_str = (
     "---------------------\n"
     "You are a helpful assistant for students at The University of Texas at Austin.\n"
     "Answer the query in a clean, simple, and concise way. Keep your answer short and avoid unnecessary filler.\n"
-    "Always cite the source of your answer using the 'source_url' from the metadata.\n"
+    "Do NOT include any citations, source URLs, or references in your answer.\n"
     "If the context does not contain a direct answer, provide the closest related information in a brief manner, and suggest verifying with the official UT Austin source if needed.\n"
     "Query: {query_str}\n"
     "Answer: "
@@ -132,7 +132,12 @@ async def handle_assistant_query(request: Request, query_request: AssistantQuery
         if source_nodes:
             for node in source_nodes:
                 source_url = node.metadata.get('source_url')
-                if source_url and source_url not in seen_urls:
+                if (
+                    source_url
+                    and source_url not in seen_urls
+                    and isinstance(source_url, str)
+                    and source_url.startswith("http")
+                ):
                     sources.append(Source(source_url=source_url))
                     seen_urls.add(source_url)
 
