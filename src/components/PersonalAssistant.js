@@ -25,7 +25,7 @@ const PersonalAssistant = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ query_text: query, user_id: '12345' }), // Replace with actual user_id
+                body: JSON.stringify({ query_text: query }),
             });
 
             if (!response.ok) {

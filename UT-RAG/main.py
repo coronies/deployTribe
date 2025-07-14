@@ -12,7 +12,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import get_config
+from config import get_config  # type: ignore  # linter: ignore[import]
 from utils.logger import get_logger
 
 # --- 0. Logging Setup ---
@@ -85,7 +85,7 @@ class Source(BaseModel):
 
 class AssistantQueryRequest(BaseModel):
     query_text: str = Field(..., min_length=3, max_length=500, description="The user's question.")
-    user_id: str = Field(..., description="A unique identifier for the user making the request.")
+    user_id: Optional[str] = Field(None, description="A unique identifier for the user making the request.")
 
 class AssistantQueryResponse(BaseModel):
     answer_text: str = Field(..., description="The AI-generated answer.")
@@ -109,7 +109,7 @@ app.add_middleware(
 )
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore  # linter: ignore[arg-type]
 
 @app.get("/", summary="Health Check", include_in_schema=False)
 async def root():
@@ -122,7 +122,8 @@ async def handle_assistant_query(request: Request, query_request: AssistantQuery
         raise HTTPException(status_code=503, detail="Query engine is not available.")
 
     try:
-        logger.info(f"Received query for user '{query_request.user_id}': {query_request.query_text}")
+        user_id = query_request.user_id or "anonymous"
+        logger.info(f"Received query for user '{user_id}': {query_request.query_text}")
         response = await request.app.state.query_engine.aquery(query_request.query_text)
 
         answer = str(response)
