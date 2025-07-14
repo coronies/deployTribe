@@ -7,6 +7,7 @@ const PersonalAssistant = () => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [openSourcesIndex, setOpenSourcesIndex] = useState(null);
+    const [error, setError] = useState('');
 
     const handleQueryChange = (e) => {
         setQuery(e.target.value);
@@ -14,7 +15,12 @@ const PersonalAssistant = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         if (!query.trim()) return;
+        if (query.trim().length < 3) {
+            setError('Please enter at least 3 characters.');
+            return;
+        }
 
         const userMessage = { text: query, sender: 'user' };
         setMessages((prevMessages) => [...prevMessages, userMessage]);
@@ -38,6 +44,7 @@ const PersonalAssistant = () => {
             setMessages((prevMessages) => [...prevMessages, assistantMessage]);
         } catch (error) {
             console.error('There was a problem with the fetch operation:', error);
+            setError('Sorry, I am having trouble connecting to the server.');
             const errorMessage = { text: 'Sorry, I am having trouble connecting to the server.', sender: 'assistant' };
             setMessages((prevMessages) => [...prevMessages, errorMessage]);
         } finally {
@@ -84,6 +91,7 @@ const PersonalAssistant = () => {
                 ))}
                 {loading && <div className="message assistant">Thinking...</div>}
             </div>
+            {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleSubmit} className="chat-input-form">
                 <input
                     type="text"

@@ -11,6 +11,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 from config import get_config  # type: ignore  # linter: ignore[import]
 from utils.logger import get_logger
@@ -18,8 +19,14 @@ from utils.logger import get_logger
 # --- 0. Logging Setup ---
 logger = get_logger(__name__)
 
+# Log and print the loaded Gemini API key for debugging
+print('GEMINI_API_KEY from os.environ:', os.environ.get('GEMINI_API_KEY'))
+logger.info(f"GEMINI_API_KEY from os.environ: {os.environ.get('GEMINI_API_KEY')}")
+
 # --- 1. Configuration ---
 config = get_config()
+print('GEMINI_API_KEY from config:', config.gemini_api_key)
+logger.info(f"GEMINI_API_KEY from config: {config.gemini_api_key}")
 
 # --- 2. Lifespan Management ---
 @asynccontextmanager
