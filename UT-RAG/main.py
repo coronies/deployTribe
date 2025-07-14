@@ -68,12 +68,10 @@ qa_prompt_tmpl_str = (
     "---------------------\n"
     "{context_str}\n"
     "---------------------\n"
-    "You are a helpful assistant for students at The University of Texas at Austin. "
-    "Given the context information and not prior knowledge, "
-    "answer the query.\n"
-    "You MUST cite the source of your answer. The source is the 'source_url' from the metadata of the context.\n"
-    "If the context does not contain a direct answer, provide a helpful response based on the closest related information, and suggest verifying with the official UT Austin source if accuracy is critical.\n"
-
+    "You are a helpful assistant for students at The University of Texas at Austin.\n"
+    "Answer the query in a clean, simple, and concise way. Keep your answer short and avoid unnecessary filler.\n"
+    "Always cite the source of your answer using the 'source_url' from the metadata.\n"
+    "If the context does not contain a direct answer, provide the closest related information in a brief manner, and suggest verifying with the official UT Austin source if needed.\n"
     "Query: {query_str}\n"
     "Answer: "
 )
